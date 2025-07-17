@@ -1,604 +1,517 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Rotina de Manutenção de TI</title>
-    <style>
-        :root {
-            --primary: #2c3e50;
-            --secondary: #34495e;
-            --accent: #3498db;
-            --light: #ecf0f1;
-            --success: #2ecc71;
-            --warning: #f39c12;
-            --danger: #e74c3c;
-        }
-        
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        
-        body {
-            background-color: #f5f7fa;
-            color: var(--primary);
-            line-height: 1.6;
-        }
-        
-        .container {
-            max-width: 1000px;
-            margin: 0 auto;
-            padding: 2rem;
-        }
-        
-        header {
-            text-align: center;
-            margin-bottom: 2rem;
-            padding-bottom: 1rem;
-            border-bottom: 1px solid #ddd;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        h1 {
-            color: var(--primary);
-            margin-bottom: 0.5rem;
-        }
-        
-        .subtitle {
-            color: var(--secondary);
-            font-weight: normal;
-        }
-        
-        .tasks-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 1.5rem;
-        }
-        
-        .task-card {
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            padding: 1.5rem;
-            transition: transform 0.2s;
-            position: relative;
-        }
-        
-        .task-card:hover {
-            transform: translateY(-5px);
-        }
-        
-        .task-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1rem;
-            padding-bottom: 0.5rem;
-            border-bottom: 1px solid #eee;
-        }
-        
-        .task-title {
-            font-weight: 600;
-            color: var(--primary);
-        }
-        
-        .task-status {
-            padding: 0.25rem 0.5rem;
-            border-radius: 4px;
-            font-size: 0.8rem;
-            font-weight: 600;
-        }
-        
-        .status-pending {
-            background-color: #fff3cd;
-            color: #856404;
-        }
-        
-        .status-in-progress {
-            background-color: #e7f5fe;
-            color: #0056b3;
-        }
-        
-        .status-completed {
-            background-color: #d4edda;
-            color: #155724;
-        }
-        
-        .task-description {
-            color: var(--secondary);
-            margin-bottom: 1rem;
-            font-size: 0.95rem;
-        }
-        
-        .task-details {
-            margin-top: 1rem;
-        }
-        
-        .detail-item {
-            display: flex;
-            margin-bottom: 0.5rem;
-        }
-        
-        .detail-label {
-            font-weight: 600;
-            min-width: 100px;
-            color: var(--secondary);
-        }
-        
-        .detail-value {
-            flex: 1;
-        }
-        
-        .btn {
-            padding: 0.5rem 1rem;
-            border-radius: 4px;
-            cursor: pointer;
-            border: none;
-            transition: background-color 0.2s;
-        }
-        
-        .btn-primary {
-            background-color: var(--accent);
-            color: white;
-        }
-        
-        .btn-primary:hover {
-            background-color: #2980b9;
-        }
-        
-        .btn-danger {
-            background-color: var(--danger);
-            color: white;
-        }
-        
-        .btn-danger:hover {
-            background-color: #c0392b;
-        }
-        
-        .btn-secondary {
-            background-color: #6c757d;
-            color: white;
-        }
-        
-        .btn-secondary:hover {
-            background-color: #5a6268;
-        }
-        
-        .task-actions {
-            display: flex;
-            gap: 0.5rem;
-            margin-top: 1rem;
-        }
-        
-        .add-task-btn {
-            background-color: var(--success);
-            color: white;
-            border: none;
-            padding: 0.5rem 1rem;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-        
-        .add-task-btn:hover {
-            background-color: #27ae60;
-        }
-        
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.5);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
-        }
-        
-        .modal-content {
-            background-color: white;
-            padding: 2rem;
-            border-radius: 8px;
-            width: 90%;
-            max-width: 500px;
-        }
-        
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1.5rem;
-        }
-        
-        .close-btn {
-            font-size: 1.5rem;
-            cursor: pointer;
-            color: var(--secondary);
-        }
-        
-        .form-group {
-            margin-bottom: 1rem;
-        }
-        
-        .form-group label {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-weight: 600;
-        }
-        
-        .form-group input, 
-        .form-group select, 
-        .form-group textarea {
-            width: 100%;
-            padding: 0.5rem;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }
-        
-        .form-group textarea {
-            min-height: 100px;
-        }
-        
-        .modal-footer {
-            display: flex;
-            justify-content: flex-end;
-            gap: 1rem;
-            margin-top: 1.5rem;
-        }
-        
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
-        }
-        
-        @media (max-width: 768px) {
-            .tasks-container {
-                grid-template-columns: 1fr;
-            }
-            
-            .container {
-                padding: 1rem;
-            }
-            
-            header {
-                flex-direction: column;
-                gap: 1rem;
-            }
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gerenciador de Tarefas de TI</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f5f7fa;
+      color: #333;
+      line-height: 1.6;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      text-align: center;
+      color: #2c3e50;
+      margin-bottom: 30px;
+      padding-bottom: 15px;
+      border-bottom: 2px solid #3498db;
+    }
+
+    .controls {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      gap: 15px;
+    }
+
+    .btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: all 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .btn-primary {
+      background-color: #3498db;
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background-color: #2980b9;
+    }
+
+    .btn-danger {
+      background-color: #e74c3c;
+      color: white;
+    }
+
+    .btn-danger:hover {
+      background-color: #c0392b;
+    }
+
+    .btn-success {
+      background-color: #2ecc71;
+      color: white;
+    }
+
+    .btn-success:hover {
+      background-color: #27ae60;
+    }
+
+    .task-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 20px;
+    }
+
+    .task-card {
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      padding: 20px;
+      transition: transform 0.2s ease;
+    }
+
+    .task-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .task-card h3 {
+      color: #2980b9;
+      margin-bottom: 10px;
+      font-size: 1.2rem;
+    }
+
+    .task-info {
+      margin-bottom: 15px;
+    }
+
+    .task-info p {
+      margin-bottom: 5px;
+    }
+
+    .task-info strong {
+      color: #2c3e50;
+    }
+
+    .task-actions {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 15px;
+    }
+
+    .status-pendente {
+      color: #e74c3c;
+    }
+
+    .status-andamento {
+      color: #f39c12;
+    }
+
+    .status-concluido {
+      color: #2ecc71;
+    }
+
+    .border-pendente {
+      border-left: 5px solid #e74c3c;
+    }
+
+    .border-andamento {
+      border-left: 5px solid #f39c12;
+    }
+
+    .border-concluido {
+      border-left: 5px solid #2ecc71;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      overflow-y: auto;
+    }
+
+    .modal-content {
+      background-color: white;
+      margin: 50px auto;
+      padding: 30px;
+      border-radius: 10px;
+      max-width: 500px;
+      width: 90%;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .modal-title {
+      font-size: 1.5rem;
+      color: #2c3e50;
+    }
+
+    .close-btn {
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: #7f8c8d;
+      transition: color 0.3s ease;
+    }
+
+    .close-btn:hover {
+      color: #e74c3c;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: bold;
+      color: #2c3e50;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      font-size: 16px;
+      transition: border 0.3s ease;
+    }
+
+    .form-control:focus {
+      border-color: #3498db;
+      outline: none;
+    }
+
+    textarea.form-control {
+      min-height: 100px;
+      resize: vertical;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px;
+      color: #7f8c8d;
+    }
+
+    .empty-state img {
+      max-width: 200px;
+      margin-bottom: 20px;
+    }
+
+    @media (max-width: 768px) {
+      .controls {
+        flex-direction: column;
+      }
+      
+      .btn {
+        width: 100%;
+      }
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <div>
-                <h1>Rotina de Manutenção de TI</h1>
-                <p class="subtitle">Controle de tarefas para atualização de equipamentos</p>
-            </div>
-            <button class="add-task-btn" onclick="openAddModal()">+ Nova Tarefa</button>
-        </header>
-        
-        <div class="tasks-container" id="tasksContainer">
-            <!-- Tarefas serão adicionadas dinamicamente aqui -->
-        </div>
+  <div class="container">
+    <h1>Gerenciador de Tarefas de TI</h1>
+
+    <div class="controls">
+      <button class="btn btn-primary" id="addTaskBtn">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M8 4V12" stroke="white" stroke-width="2" stroke-linecap="round"/>
+          <path d="M4 8H12" stroke="white" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        Adicionar Tarefa
+      </button>
     </div>
-    
-    <!-- Modal de Adição/Edição -->
-    <div class="modal" id="taskModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 id="modalTitle">Nova Tarefa</h2>
-                <span class="close-btn" onclick="closeModal()">&times;</span>
-            </div>
-            <form id="taskForm">
-                <div class="form-group">
-                    <label for="taskTitle">Título:</label>
-                    <input type="text" id="taskTitle" required />
-                </div>
-                <div class="form-group">
-                    <label for="taskDescription">Descrição:</label>
-                    <textarea id="taskDescription" required></textarea>
-                </div>
-                <div class="form-group">
-                    <label for="taskPriority">Prioridade:</label>
-                    <select id="taskPriority" required>
-                        <option value="Alta">Alta</option>
-                        <option value="Média" selected>Média</option>
-                        <option value="Baixa">Baixa</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="taskStatus">Status:</label>
-                    <select id="taskStatus" required>
-                        <option value="Pendente" selected>Pendente</option>
-                        <option value="Em Andamento">Em Andamento</option>
-                        <option value="Concluído">Concluído</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="taskUnits">Unidades:</label>
-                    <input type="text" id="taskUnits" required value="Todas" />
-                </div>
-                <div class="form-group">
-                    <label for="taskDeadline">Prazo (dias):</label>
-                    <input type="number" id="taskDeadline" required min="1" value="30" />
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
-                    <button type="button" id="saveTaskBtn" class="btn btn-primary">Salvar</button>
-                </div>
-            </form>
-        </div>
+
+    <div class="task-container" id="tasksContainer">
+      <!-- Tasks will be rendered here -->
     </div>
+  </div>
+
+  <!-- Modal de Edição/Adição -->
+  <div id="taskModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title" id="modalTitle">Nova Tarefa</h2>
+        <span class="close-btn" onclick="closeModal()">&times;</span>
+      </div>
+      <form id="taskForm">
+        <div class="form-group">
+          <label for="title">Título</label>
+          <input type="text" id="title" class="form-control" required>
+        </div>
+
+        <div class="form-group">
+          <label for="description">Descrição</label>
+          <textarea id="description" class="form-control" required></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="priority">Prioridade</label>
+          <select id="priority" class="form-control" required>
+            <option value="Alta">Alta</option>
+            <option value="Média">Média</option>
+            <option value="Baixa">Baixa</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="status">Status</label>
+          <select id="status" class="form-control" required>
+            <option value="Pendente">Pendente</option>
+            <option value="Em Andamento">Em Andamento</option>
+            <option value="Concluído">Concluído</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="units">Unidades</label>
+          <input type="text" id="units" class="form-control" required>
+        </div>
+
+        <div class="form-group">
+          <label for="deadline">Prazo (dias)</label>
+          <input type="number" id="deadline" class="form-control" min="1" required>
+        </div>
+
+        <button type="submit" class="btn btn-primary" id="saveBtn">Salvar</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal de Confirmação -->
+  <div id="confirmModal" class="modal">
+    <div class="modal-content" style="max-width: 400px;">
+      <div class="modal-header">
+        <h2 class="modal-title">Confirmar Exclusão</h2>
+        <span class="close-btn" onclick="closeConfirmModal()">&times;</span>
+      </div>
+      <p>Tem certeza que deseja excluir esta tarefa?</p>
+      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+        <button class="btn" onclick="closeConfirmModal()">Cancelar</button>
+        <button class="btn btn-danger" id="confirmDeleteBtn">Excluir</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Variáveis globais
+    let tasks = JSON.parse(localStorage.getItem("tasks")) || [
+      {
+        title: "Atualizar servidores",
+        description: "Realizar atualização de segurança nos servidores principais",
+        priority: "Alta",
+        status: "Pendente",
+        units: "5",
+        deadline: "3"
+      },
+      {
+        title: "Monitorar redes",
+        description: "Monitorar tráfego e desempenho da rede corporativa",
+        priority: "Média",
+        status: "Em Andamento",
+        units: "3",
+        deadline: "7"
+      },
+      {
+        title: "Backup diário",
+        description: "Verificar e executar backup dos sistemas críticos",
+        priority: "Alta",
+        status: "Concluído",
+        units: "2",
+        deadline: "1"
+      }
+    ];
+    let editingIndex = null;
+    let deletingIndex = null;
+
+    // Elementos do DOM
+    const tasksContainer = document.getElementById("tasksContainer");
+    const addTaskBtn = document.getElementById("addTaskBtn");
+    const taskModal = document.getElementById("taskModal");
+    const confirmModal = document.getElementById("confirmModal");
+    const taskForm = document.getElementById("taskForm");
     
-    <script>
-        // Inicializa as tarefas a partir do localStorage ou usa tarefas padrão
-        let tasks = [];
+    // Função para salvar tarefas no localStorage
+    function saveTasks() {
+      localStorage.setItem("tasks", JSON.stringify(tasks));
+    }
 
-        // Carregar tarefas do localStorage ao iniciar
-        document.addEventListener('DOMContentLoaded', function() {
-            const savedTasks = localStorage.getItem('tasks');
-            if (savedTasks) {
-                tasks = JSON.parse(savedTasks);
-            } else {
-                // Tarefas iniciais padrão (opcional)
-                tasks = [
-                    {
-                        id: Date.now(),
-                        title: "Atualização para Windows 11",
-                        description: "Atualizar todos os computadores da recepção de todas as unidades de Windows 10 para Windows 11, incluindo verificação de compatibilidade de hardware.",
-                        priority: "Média",
-                        status: "Pendente",
-                        units: "Todas",
-                        deadline: "30"
-                    },
-                    {
-                        id: Date.now() + 1,
-                        title: "Upgrade de Hardware",
-                        description: "Instalar memória RAM de 8GB e SSD em todos os computadores da recepção, priorizando unidades com maior demanda.",
-                        priority: "Média",
-                        status: "Pendente",
-                        units: "Todas",
-                        deadline: "30"
-                    },
-                    {
-                        id: Date.now() + 2,
-                        title: "Planejamento de Visitas",
-                        description: "Criar um calendário de visitas mensais para verificar se todas as unidades atendem aos padrões.",
-                        priority: "Média",
-                        status: "Pendente",
-                        units: "Todas",
-                        deadline: "30"
-                    }
-                ];
-                salvarTasks();
-            }
-            renderTasks();
-        });
+    // Função para renderizar as tarefas
+    function renderTasks() {
+      tasksContainer.innerHTML = '';
+      
+      if (tasks.length === 0) {
+        tasksContainer.innerHTML = '';
+        return;
+      }
 
-        // Variáveis de controle
-        let currentTaskId = null;
-        let isEditMode = false;
-        
-        function salvarTasks() {
-            localStorage.setItem('tasks', JSON.stringify(tasks));
-        }
+      tasks.forEach((task, index) => {
+        const statusClass = task.status === 'Pendente' ? 'status-pendente' :
+                            task.status === 'Em Andamento' ? 'status-andamento' : 'status-concluido';
+        const borderClass = task.status === 'Pendente' ? 'border-pendente' :
+                            task.status === 'Em Andamento' ? 'border-andamento' : 'border-concluido';
 
-        // Renderiza todas as tarefas
-        function renderTasks() {
-            const container = document.getElementById('tasksContainer');
-            container.innerHTML = '';
-            tasks.forEach(task => {
-                container.appendChild(createTaskCard(task));
-            });
-        }
-        
-        // Cria um card de tarefa
-        function createTaskCard(task) {
-            const card = document.createElement('div');
-            card.className = 'task-card';
-            card.dataset.id = task.id;
-            
-            // Cabeçalho com título e status
-            const header = document.createElement('div');
-            header.className = 'task-header';
-            
-            const title = document.createElement('h3');
-            title.className = 'task-title';
-            title.textContent = task.title;
-            
-            const status = document.createElement('span');
-            status.className = `task-status status-${getStatusClass(task.status)}`;
-            status.textContent = task.status;
-            
-            header.appendChild(title);
-            header.appendChild(status);
-            
-            // Descrição
-            const description = document.createElement('p');
-            description.className = 'task-description';
-            description.textContent = task.description;
-            
-            // Detalhes
-            const details = document.createElement('div');
-            details.className = 'task-details';
-            
-            const priorityItem = createDetailItem('Prioridade:', task.priority);
-            const unitsItem = createDetailItem('Unidades:', task.units);
-            const deadlineItem = createDetailItem('Prazo:', `${task.deadline} dias`);
-            
-            details.appendChild(priorityItem);
-            details.appendChild(unitsItem);
-            details.appendChild(deadlineItem);
-            
-            // Botões de ação
-            const actions = document.createElement('div');
-            actions.className = 'task-actions';
-            
-            const editBtn = document.createElement('button');
-            editBtn.className = 'btn btn-primary';
-            editBtn.textContent = 'Editar';
-            editBtn.onclick = () => openEditModal(task.id);
-            
-            const deleteBtn = document.createElement('button');
-            deleteBtn.className = 'btn btn-danger';
-            deleteBtn.textContent = 'Excluir';
-            deleteBtn.onclick = () => confirmDelete(task.id);
-            
-            actions.appendChild(editBtn);
-            actions.appendChild(deleteBtn);
-            
-            card.appendChild(header);
-            card.appendChild(description);
-            card.appendChild(details);
-            card.appendChild(actions);
-            
-            return card;
-        }
-        
-        // Cria um item de detalhe
-        function createDetailItem(label, value) {
-            const item = document.createElement('div');
-            item.className = 'detail-item';
-            
-            const labelSpan = document.createElement('span');
-            labelSpan.className = 'detail-label';
-            labelSpan.textContent = label;
-            
-            const valueSpan = document.createElement('span');
-            valueSpan.className = 'detail-value';
-            valueSpan.textContent = value;
-            
-            item.appendChild(labelSpan);
-            item.appendChild(valueSpan);
-            return item;
-        }
-        
-        // Retorna a classe CSS para o status
-        function getStatusClass(status) {
-            switch(status) {
-                case 'Pendente': return 'pending';
-                case 'Em Andamento': return 'in-progress';
-                case 'Concluído': return 'completed';
-                default: return 'pending';
-            }
-        }
-        
-        // Abre o modal para adicionar nova tarefa
-        function openAddModal() {
-            isEditMode = false;
-            currentTaskId = null;
-            
-            document.getElementById('modalTitle').textContent = 'Nova Tarefa';
-            document.getElementById('taskTitle').value = '';
-            document.getElementById('taskDescription').value = '';
-            document.getElementById('taskPriority').value = 'Média';
-            document.getElementById('taskStatus').value = 'Pendente';
-            document.getElementById('taskUnits').value = 'Todas';
-            document.getElementById('taskDeadline').value = '30';
-            document.getElementById('saveTaskBtn').onclick = saveTask;
-            
-            document.getElementById('taskModal').style.display = 'flex';
-        }
-        
-        // Abre o modal para editar tarefa existente
-        function openEditModal(taskId) {
-            isEditMode = true;
-            currentTaskId = taskId;
-            
-            const task = tasks.find(t => t.id === taskId);
-            if (!task) return;
-            
-            document.getElementById('modalTitle').textContent = 'Editar Tarefa';
-            document.getElementById('taskTitle').value = task.title;
-            document.getElementById('taskDescription').value = task.description;
-            document.getElementById('taskPriority').value = task.priority;
-            document.getElementById('taskStatus').value = task.status;
-            document.getElementById('taskUnits').value = task.units;
-            document.getElementById('taskDeadline').value = task.deadline;
-            document.getElementById('saveTaskBtn').onclick = saveTask;
-            
-            document.getElementById('taskModal').style.display = 'flex';
-        }
-        
-        // Fecha o modal
-        function closeModal() {
-            document.getElementById('taskModal').style.display = 'none';
-        }
-        
-        // Salva a tarefa (nova ou existente)
-        function saveTask() {
-            const title = document.getElementById('taskTitle').value.trim();
-            const description = document.getElementById('taskDescription').value.trim();
-            const priority = document.getElementById('taskPriority').value;
-            const status = document.getElementById('taskStatus').value;
-            const units = document.getElementById('taskUnits').value.trim();
-            const deadline = document.getElementById('taskDeadline').value;
-            
-            // Validação básica
-            if (!title || !description || !units || !deadline) {
-                alert('Por favor, preencha todos os campos.');
-                return;
-            }
-            
-            const taskData = {
-                id: isEditMode ? currentTaskId : Date.now(),
-                title,
-                description,
-                priority,
-                status,
-                units,
-                deadline
-            };
-            
-            if (isEditMode) {
-                // Atualiza tarefa existente
-                const index = tasks.findIndex(t => t.id === currentTaskId);
-                if (index !== -1) {
-                    tasks[index] = taskData;
-                }
-            } else {
-                // Adiciona nova tarefa no início da lista
-                tasks.unshift(taskData);
-            }
+        const taskCard = document.createElement('div');
+        taskCard.className = `task-card ${borderClass}`;
+        taskCard.innerHTML = `
+          <h3>${task.title}</h3>
+          <div class="task-info">
+            <p><strong>Descrição:</strong> ${task.description}</p>
+            <p><strong>Prioridade:</strong> ${task.priority}</p>
+            <p><strong>Status:</strong> <span class="${statusClass}">${task.status}</span></p>
+            <p><strong>Unidades:</strong> ${task.units}</p>
+            <p><strong>Prazo:</strong> ${task.deadline} dias</p>
+          </div>
+          <div class="task-actions">
+            <button class="btn btn-success" onclick="editTask(${index})">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M10.5 1.5L14.5 5.5M1.5 14.5L5.088 13.905C5.40215 13.8556 5.69106 13.7129 5.916 13.497L13.497 5.916C13.7271 5.68586 13.8579 5.37475 13.8579 5.0505C13.8579 4.72625 13.7271 4.41514 13.497 4.185L11.815 2.503C11.5849 2.27287 11.2737 2.14214 10.9495 2.14214C10.6253 2.14214 10.3141 2.27287 10.084 2.503L2.503 10.084C2.2883 10.3088 2.14556 10.5974 2.095 10.911L1.5 14.5Z" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              Editar
+            </button>
+            <button class="btn btn-danger" onclick="showDeleteConfirm(${index})">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M3 4.5H13M5.5 4.5V3C5.5 2.44772 5.94772 2 6.5 2H9.5C10.0523 2 10.5 2.44772 10.5 3V4.5M12.5 4.5V13C12.5 13.5523 12.0523 14 11.5 14H4.5C3.94772 14 3.5 13.5523 3.5 13V4.5H12.5Z" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              Excluir
+            </button>
+          </div>
+        `;
+        tasksContainer.appendChild(taskCard);
+      });
+    }
 
-            salvarTasks(); // Salva no localStorage
-            renderTasks();
-            closeModal();
-            
-            // Feedback visual
-            const card = document.querySelector(`.task-card[data-id="${taskData.id}"]`);
-            if (card) {
-                card.style.animation = 'pulse 0.5s';
-                setTimeout(() => card.style.animation = '', 500);
-            }
-        }
-        
-        // Confirma a exclusão de uma tarefa
-        function confirmDelete(taskId) {
-            if (confirm('Tem certeza que deseja excluir esta tarefa?')) {
-              deleteTask(taskId);
-            }
-        }
-        
-        // Exclui uma tarefa
-        function deleteTask(taskId) {
-            tasks = tasks.filter(task => task.id !== taskId);
-            salvarTasks(); // Atualiza localStorage após exclusão
-            renderTasks();
-        }
-        
-        // Fechar modal ao clicar fora
-        window.onclick = function(event) {
-            const modal = document.getElementById('taskModal');
-            if (event.target === modal) {
-                closeModal();
-            }
-        }
+    // Função para abrir o modal de tarefa
+    function openModal(title = 'Nova Tarefa') {
+      document.getElementById('modalTitle').textContent = title;
+      taskModal.style.display = 'block';
+    }
+
+    // Função para fechar o modal de tarefa
+    function closeModal() {
+      taskModal.style.display = 'none';
+      taskForm.reset();
+      editingIndex = null;
+    }
+
+    // Função para mostrar modal de confirmação de exclusão
+    function showDeleteConfirm(index) {
+      deletingIndex = index;
+      confirmModal.style.display = 'block';
+    }
+
+    // Função para fechar modal de confirmação de exclusão
+    function closeConfirmModal() {
+      confirmModal.style.display = 'none';
+      deletingIndex = null;
+    }
+
+    // Função para editar uma tarefa
+    function editTask(index) {
+      editingIndex = index;
+      const task = tasks[index];
+      document.getElementById('title').value = task.title;
+      document.getElementById('description').value = task.description;
+      document.getElementById('priority').value = task.priority;
+      document.getElementById('status').value = task.status;
+      document.getElementById('units').value = task.units;
+      document.getElementById('deadline').value = task.deadline;
+      openModal('Editar Tarefa');
+    }
+
+    // Função para excluir uma tarefa
+    function deleteTask(index) {
+      tasks.splice(index, 1);
+      saveTasks();
+      renderTasks();
+      closeConfirmModal();
+    }
+
+    // Event Listeners
+    addTaskBtn.addEventListener('click', () => {
+      editingIndex = null;
+      openModal();
+    });
+
+    taskForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      const newTask = {
+        title: document.getElementById('title').value,
+        description: document.getElementById('description').value,
+        priority: document.getElementById('priority').value,
+        status: document.getElementById('status').value,
+        units: document.getElementById('units').value,
+        deadline: document.getElementById('deadline').value
+      };
+
+      if (editingIndex !== null) {
+        // Editar tarefa existente
+        tasks[editingIndex] = newTask;
+      } else {
+        // Adicionar nova tarefa
+        tasks.push(newTask);
+      }
+
+      saveTasks();
+      renderTasks();
+      closeModal();
+    });
+
+    document.getElementById('confirmDeleteBtn').addEventListener('click', () => {
+      if (deletingIndex !== null) {
+        deleteTask(deletingIndex);
+      }
+    });
+
+    // Fechar modais ao clicar fora
+    window.addEventListener('click', function(e) {
+      if (e.target === taskModal) {
+        closeModal();
+      }
+      if (e.target === confirmModal) {
+        closeConfirmModal();
+      }
+    });
+
+    // Inicialização
+    saveTasks(); // Garante que as tarefas padrão sejam salvas
+    renderTasks();
+  </script>
+</body>
+</html>
