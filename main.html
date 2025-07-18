@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rotina de Manutenção de TI</title>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #34495e;
+            --accent: #3498db;
+            --light: #ecf0f1;
+            --success: #2ecc71;
+            --warning: #f39c12;
+            --danger: #e74c3c;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            color: var(--primary);
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        h1 {
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+        
+        .subtitle {
+            color: var(--secondary);
+            font-weight: normal;
+        }
+        
+        .tasks-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        .task-card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 1.5rem;
+            transition: transform 0.2s;
+        }
+        
+        .task-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .task-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .task-title {
+            font-weight: 600;
+            color: var(--primary);
+        }
+        
+        .task-status {
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        
+        .status-pending {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        
+        .status-in-progress {
+            background-color: #e7f5fe;
+            color: #0056b3;
+        }
+        
+        .status-completed {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        
+        .task-description {
+            color: var(--secondary);
+            margin-bottom: 1rem;
+            font-size: 0.95rem;
+        }
+        
+        .task-details {
+            margin-top: 1rem;
+        }
+        
+        .detail-item {
+            display: flex;
+            margin-bottom: 0.5rem;
+        }
+        
+        .detail-label {
+            font-weight: 600;
+            min-width: 100px;
+            color: var(--secondary);
+        }
+        
+        .detail-value {
+            flex: 1;
+        }
+        
+        .edit-btn {
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 1rem;
+            width: 100%;
+            transition: background-color 0.2s;
+        }
+        
+        .edit-btn:hover {
+            background-color: #2980b9;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 500px;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        
+        .close-btn {
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--secondary);
+        }
+        
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+        
+        .form-group input, 
+        .form-group select, 
+        .form-group textarea {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        .form-group textarea {
+            min-height: 100px;
+        }
+        
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+        
+        .btn {
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            border: none;
+        }
+        
+        .btn-primary {
+            background-color: var(--accent);
+            color: white;
+        }
+        
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+        
+        @media (max-width: 768px) {
+            .tasks-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .container {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Rotina de Manutenção de TI</h1>
+            <p class="subtitle">Controle de tarefas para atualização de equipamentos</p>
+        </header>
+        
+        <div class="tasks-container">
+            <!-- Tarefa 1 -->
+            <div class="task-card">
+                <div class="task-header">
+                    <h3 class="task-title">Atualização para Windows 11</h3>
+                    <span class="task-status status-pending">Pendente</span>
+                </div>
+                <p class="task-description">Atualizar todos os computadores da recepão de todas das unidades de Windows 10 para Windows 11, incluindo verificação de compatibilidade de hardware.</p>
+                <div class="task-details">
+                    <div class="detail-item">
+                        <span class="detail-label">Prioridade:</span>
+                        <span class="detail-value">Media</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Unidades:</span>
+                        <span class="detail-value">Todas</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Prazo:</span>
+                        <span class="detail-value">30 dias</span>
+                    </div>
+                </div>
+                <button class="edit-btn" onclick="openEditModal(0)">Editar Tarefa</button>
+            </div>
+            
+            <!-- Tarefa 2 -->
+            <div class="task-card">
+                <div class="task-header">
+                    <h3 class="task-title">Upgrade de Hardware</h3>
+                    <span class="task-status status-pending">Pendente</span>
+                </div>
+                <p class="task-description">Instalar memória RAM de 8GB e SSD em todos os computadores da recepção, priorizando unidades com maior demanda.</p>
+                <div class="task-details">
+                    <div class="detail-item">
+                        <span class="detail-label">Prioridade:</span>
+                        <span class="detail-value">Média</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Unidades:</span>
+                        <span class="detail-value">Todas</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Prazo:</span>
+                        <span class="detail-value">30 dias</span>
+                    </div>
+                </div>
+                <button class="edit-btn" onclick="openEditModal(1)">Editar Tarefa</button>
+            </div>
+            
+            <!-- Tarefa 3 -->
+            <div class="task-card">
+                <div class="task-header">
+                    <h3 class="task-title">Planejamento de Visitas</h3>
+                    <span class="task-status status-pending">Pendente</span>
+                </div>
+                <p class="task-description">Criar um calendário de visitas mensais para verificar se todas as unidades atendem aos padrões.</p>
+                <div class="task-details">
+                    <div class="detail-item">
+                        <span class="detail-label">Prioridade:</span>
+                        <span class="detail-value">Media</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Frequência:</span>
+                        <span class="detail-value">Mensal</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Prazo:</span>
+                        <span class="detail-value">30 dias</span>
+                    </div>
+                </div>
+                <button class="edit-btn" onclick="openEditModal(2)">Editar Tarefa</button>
+            </div>
+            
+            <!-- Tarefa 4 -->
+            <div class="task-card">
+                <div class="task-header">
+                    <h3 class="task-title">Coleta de Informações</h3>
+                    <span class="task-status status-pending">Pendente</span>
+                </div>
+                <p class="task-description">Documentar IPs, senhas padrão e configurações de rede de todas as impressoras das unidades para centralizar no sistema.</p>
+                <div class="task-details">
+                    <div class="detail-item">
+                        <span class="detail-label">Prioridade:</span>
+                        <span class="detail-value">Média</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Unidades:</span>
+                        <span class="detail-value">Todas</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Prazo:</span>
+                        <span class="detail-value">30 dias</span>
+                    </div>
+                </div>
+                <button class="edit-btn" onclick="openEditModal(3)">Editar Tarefa</button>
+            </div>
+            
+            <!-- Tarefa 5 -->
+            <div class="task-card">
+                <div class="task-header">
+                    <h3 class="task-title">Configuração de Hack</h3>
+                    <span class="task-status status-pending">Pendente</span>
+                </div>
+                <p class="task-description">Instalar computadores no hack de todas as unidade, padronizando conforme política de TI.</p>
+                <div class="task-details">
+                    <div class="detail-item">
+                        <span class="detail-label">Prioridade:</span>
+                        <span class="detail-value">Media</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Unidades:</span>
+                        <span class="detail-value">Todas</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Prazo:</span>
+                        <span class="detail-value">30 dias</span>
+                    </div>
+                </div>
+                <button class="edit-btn" onclick="openEditModal(4)">Editar Tarefa</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal de Edição -->
+    <div class="modal" id="editModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Editar Tarefa</h2>
+                <span class="close-btn" onclick="closeModal()">&times;</span>
+            </div>
+            <form id="taskForm">
+                <div class="form-group">
+                    <label for="editTitle">Título:</label>
+                    <input type="text" id="editTitle" required>
+                </div>
+                <div class="form-group">
+                    <label for="editDescription">Descrição:</label>
+                    <textarea id="editDescription" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="editPriority">Prioridade:</label>
+                    <select id="editPriority" required>
+                        <option value="Alta">Alta</option>
+                        <option value="Média">Média</option>
+                        <option value="Baixa">Baixa</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="editStatus">Status:</label>
+                    <select id="editStatus" required>
+                        <option value="Pendente">Pendente</option>
+                        <option value="Em Andamento">Em Andamento</option>
+                        <option value="Concluído">Concluído</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="editUnits">Unidades:</label>
+                    <input type="text" id="editUnits" required>
+                </div>
+                <div class="form-group">
+                    <label for="editDeadline">Prazo (dias):</label>
+                    <input type="number" id="editDeadline" required>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+                    <button type="button" class="btn btn-primary" onclick="saveTask()">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <script>
+        // Dados das tarefas
+        const tasks = [
+            {
+                title: "Atualização para Windows 11",
+                description: "Atualizar todos os computadores das unidades de Windows 10 para Windows 11.",
+                priority: "Alta",
+                status: "Pendente",
+                units: "Todas",
+                deadline: "30"
+            },
+            {
+                title: "Upgrade de Hardware",
+                description: "Instalar memória RAM de 8GB e SSD em todos os computadores da recepção.",
+                priority: "Média",
+                status: "Em Andamento",
+                units: "Recepção",
+                deadline: "45"
+            },
+            {
+                title: "Planejamento de Visitas",
+                description: "Criar um cronograma de visitas nas unidades para verificar conformidade com os padrões.",
+                priority: "Alta",
+                status: "Pendente",
+                units: "Todas",
+                deadline: "15"
+            },
+            {
+                title: "Coleta de Informações",
+                description: "Coletar IPs e senhas das impressoras de todas as unidades.",
+                priority: "Média",
+                status: "Pendente",
+                units: "Todas",
+                deadline: "60"
+            },
+            {
+                title: "Configuração de Hack",
+                description: "Colocar os computadores no hack de cada unidade.",
+                priority: "Alta",
+                status: "Pendente",
+                units: "Todas",
+                deadline: "30"
+            }
+        ];
+        
+        let currentTaskIndex = null;
+        
+        // Abrir modal de edição
+        function openEditModal(index) {
+            currentTaskIndex = index;
+            const task = tasks[index];
+            
+            document.getElementById('editTitle').value = task.title;
+            document.getElementById('editDescription').value = task.description;
+            document.getElementById('editPriority').value = task.priority;
+            document.getElementById('editStatus').value = task.status;
+            document.getElementById('editUnits').value = task.units;
+            document.getElementById('editDeadline').value = task.deadline;
+            
+            document.getElementById('editModal').style.display = 'flex';
+        }
+        
+        // Fechar modal
+        function closeModal() {
+            document.getElementById('editModal').style.display = 'none';
+        }
+        
+        // Salvar tarefa editada
+        function saveTask() {
+            const title = document.getElementById('editTitle').value;
+            const description = document.getElementById('editDescription').value;
+            const priority = document.getElementById('editPriority').value;
+            const status = document.getElementById('editStatus').value;
+            const units = document.getElementById('editUnits').value;
+            const deadline = document.getElementById('editDeadline').value;
+            
+            // Atualizar dados da tarefa
+            tasks[currentTaskIndex] = {
+                title,
+                description,
+                priority,
+                status,
+                units,
+                deadline
+            };
+            
+            // Atualizar exibição
+            updateTaskDisplay(currentTaskIndex);
+            
+            // Fechar modal
+            closeModal();
+        }
+        
+        // Atualizar exibição da tarefa
+        function updateTaskDisplay(index) {
+            const task = tasks[index];
+            const taskElement = document.querySelectorAll('.task-card')[index];
+            
+            // Atualizar título
+            taskElement.querySelector('.task-title').textContent = task.title;
+            
+            // Atualizar status
+            const statusElement = taskElement.querySelector('.task-status');
+            statusElement.textContent = task.status;
+            
+            // Atualizar classes de status
+            statusElement.className = 'task-status';
+            if (task.status === 'Pendente') {
+                statusElement.classList.add('status-pending');
+            } else if (task.status === 'Em Andamento') {
+                statusElement.classList.add('status-in-progress');
+            } else {
+                statusElement.classList.add('status-completed');
+            }
+            
+            // Atualizar descrição
+            taskElement.querySelector('.task-description').textContent = task.description;
+            
+            // Atualizar detalhes
+            const details = taskElement.querySelectorAll('.detail-value');
+            details[0].textContent = task.priority;
+            details[1].textContent = task.units;
+            details[2].textContent = `${task.deadline} dias`;
+        }
+        
+        // Fechar modal ao clicar fora
+        window.onclick = function(event) {
+            const modal = document.getElementById('editModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        }
+    </script>
+</body>
+</html>
