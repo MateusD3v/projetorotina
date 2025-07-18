@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rotina de Manutenção de TI</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Rotina de Manutenção de TI</h1>
+            <p class="subtitle">Controle de tarefas para atualização de equipamentos</p>
+        </header>
+        
+        <div class="tasks-container" id="tasksContainer">
+            <!-- As tarefas serão carregadas dinamicamente via JavaScript -->
+        </div>
+        
+        <button class="add-btn" id="addTaskBtn">Adicionar Nova Tarefa</button>
+    </div>
+    
+    <!-- Modal de Edição/Adição -->
+    <div class="modal" id="editModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Editar Tarefa</h2>
+                <span class="close-btn" id="closeModalBtn">&times;</span>
+            </div>
+            <form id="taskForm">
+                <input type="hidden" id="editId">
+                <div class="form-group">
+                    <label for="editTitle">Título:</label>
+                    <input type="text" id="editTitle" required>
+                </div>
+                <div class="form-group">
+                    <label for="editDescription">Descrição:</label>
+                    <textarea id="editDescription" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="editPriority">Prioridade:</label>
+                    <select id="editPriority" required>
+                        <option value="Alta">Alta</option>
+                        <option value="Média">Média</option>
+                        <option value="Baixa">Baixa</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="editStatus">Status:</label>
+                    <select id="editStatus" required>
+                        <option value="Pendente">Pendente</option>
+                        <option value="Em Andamento">Em Andamento</option>
+                        <option value="Concluído">Concluído</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="editUnits">Unidades:</label>
+                    <input type="text" id="editUnits" required>
+                </div>
+                <div class="form-group">
+                    <label for="editDeadline">Prazo (dias):</label>
+                    <input type="number" id="editDeadline" required>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" id="cancelBtn">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="saveBtn">Salvar</button>
+                    <button type="button" class="btn btn-danger" id="deleteBtn" style="display: none;">Excluir</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <script src="/js/script.js"></script>
+</body>
+</html>
