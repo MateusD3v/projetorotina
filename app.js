@@ -1,16 +1,14 @@
 require('dotenv').config();
 const express = require('express');
-const Parse = require('parse/node');
+const admin = require('firebase-admin');
 const path = require('path');
 const tasksRouter = require('./routes/tasks');
 
-// Configuração do Parse (Back4App)
-Parse.initialize(
-  process.env.BACK4APP_APPLICATION_ID,
-  process.env.BACK4APP_JAVASCRIPT_KEY,
-  process.env.BACK4APP_MASTER_KEY
-);
-Parse.serverURL = 'https://parseapi.back4app.com/';
+// Inicializa o Firebase Admin
+const serviceAccount = require('./serviceAccountKey.json');
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount)
+});
 
 const app = express();
 

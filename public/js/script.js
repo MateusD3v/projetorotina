@@ -35,19 +35,21 @@ document.addEventListener('DOMContentLoaded', () => {
             
             tasksContainer.innerHTML = '';
             
-            tasks.forEach((task, index) => {
-                const taskCard = createTaskCard(task, index);
+            tasks.forEach((task) => {
+                const taskCard = createTaskCard(task);
                 tasksContainer.appendChild(taskCard);
             });
         } catch (error) {
             console.error('Erro ao carregar tarefas:', error);
+            showAlert('error', 'Erro ao carregar tarefas');
         }
     }
     
     // Criar card de tarefa
-    function createTaskCard(task, index) {
+    function createTaskCard(task) {
         const taskCard = document.createElement('div');
         taskCard.className = 'task-card';
+        taskCard.dataset.id = task.id;
         
         let statusClass = 'status-pending';
         if (task.status === 'Em Andamento') statusClass = 'status-in-progress';
@@ -73,7 +75,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <span class="detail-value">${task.deadline} dias</span>
                 </div>
             </div>
-            <button class="edit-btn" data-id="${task.id}">Editar Tarefa</button>
+            <button class="edit-btn">Editar Tarefa</button>
         `;
         
         taskCard.querySelector('.edit-btn').addEventListener('click', () => {
@@ -105,6 +107,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.getElementById('editDeadline').value = task.deadline;
             } catch (error) {
                 console.error('Erro ao carregar tarefa:', error);
+                showAlert('error', 'Erro ao carregar tarefa');
             }
         } else {
             // Modo adição
@@ -142,6 +145,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     },
                     body: JSON.stringify(taskData)
                 });
+                showAlert('success', 'Tarefa atualizada com sucesso!');
             } else {
                 // Criar nova tarefa
                 await fetch('/tasks', {
@@ -151,12 +155,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     },
                     body: JSON.stringify(taskData)
                 });
+                showAlert('success', 'Tarefa criada com sucesso!');
             }
             
             closeModal();
             loadTasks();
         } catch (error) {
             console.error('Erro ao salvar tarefa:', error);
+            showAlert('error', 'Erro ao salvar tarefa');
         }
     }
     
@@ -164,15 +170,32 @@ document.addEventListener('DOMContentLoaded', () => {
     async function deleteTask() {
         if (!currentTaskId) return;
         
+        if (!confirm('Tem certeza que deseja excluir esta tarefa?')) return;
+        
         try {
             await fetch(`/tasks/${currentTaskId}`, {
                 method: 'DELETE'
             });
             
+            showAlert('success', 'Tarefa excluída com sucesso!');
             closeModal();
             loadTasks();
         } catch (error) {
             console.error('Erro ao excluir tarefa:', error);
+            showAlert('error', 'Erro ao excluir tarefa');
         }
+    }
+    
+    // Mostrar alerta
+    function showAlert(type, message) {
+        const alert = document.createElement('div');
+        alert.className = `alert alert-${type}`;
+        alert.textContent = message;
+        
+        document.body.appendChild(alert);
+        
+        setTimeout(() => {
+            alert.remove();
+        }, 3000);
     }
 });
