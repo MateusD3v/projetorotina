@@ -1,21 +1,30 @@
 {
-  "name": "rotina-manutencao-ti-firebase",
+  "name": "rotina-manutencao-ti-back4app",
   "version": "1.0.0",
-  "description": "Sistema de controle de tarefas de manutenção de TI com Firebase",
+  "description": "Sistema de controle de tarefas de manutenção de TI com Back4App",
   "main": "app.js",
   "scripts": {
     "start": "node app.js",
     "dev": "nodemon app.js",
-    "test-firebase": "node test-firebase.js",
-    "setup": "echo Instalando dependências... && npm install && echo Testando Firebase... && npm run test-firebase"
+    "test-back4app": "node test-back4app.js",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "validate": "npm run lint && npm run format:check"
   },
   "dependencies": {
-    "dotenv": "^16.6.1",
-    "ejs": "^3.1.10",
     "express": "^4.21.2",
-    "firebase-admin": "^11.11.1"
+    "parse": "^5.3.0",
+    "dotenv": "^16.6.1"
   },
   "devDependencies": {
-    "nodemon": "^2.0.20"
+    "nodemon": "^2.0.20",
+    "eslint": "^8.54.0",
+    "prettier": "^3.1.0"
+  },
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=8.0.0"
   }
 }

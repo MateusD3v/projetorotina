@@ -1,23 +1,12 @@
-// Importar Firebase (usando CDN)
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+// Configuração do Parse SDK
+Parse.initialize(
+  'xrkPQgeanlbyRGOOqaR9kChOXIrEMZnPhOo271qp', // Application ID
+  'nQoYP0tnyrYOn1XoKTpjx777AWP4WhIL4aZL37S1'  // JavaScript Key
+);
+Parse.serverURL = 'https://parseapi.back4app.com';
 
-// IMPORTANTE: Substitua pela configuração do seu projeto Firebase
-const firebaseConfig = {
-    apiKey: "sua-api-key-aqui",
-    authDomain: "projetorotinha.firebaseapp.com",
-    projectId: "projetorotinha",
-    storageBucket: "projetorotinha.appspot.com",
-    messagingSenderId: "123456789",
-    appId: "1:123456789:web:abcdef123456"
-};
-
-// Inicializar Firebase
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-
-let currentUser = null;
-let authToken = null;
+// Definir a classe Task
+const Task = Parse.Object.extend('Task');
 
 document.addEventListener('DOMContentLoaded', () => {
     const tasksContainer = document.getElementById('tasksContainer');
@@ -31,23 +20,8 @@ document.addEventListener('DOMContentLoaded', () => {
     
     let currentTaskId = null;
     
-    // Verificar autenticação
-    onAuthStateChanged(auth, async (user) => {
-        if (user) {
-            currentUser = user;
-            authToken = await user.getIdToken();
-            console.log('Usuário autenticado:', user.email);
-            
-            // Mostrar informações do usuário
-            showUserInfo(user);
-            
-            // Carregar tarefas
-            loadTasks();
-        } else {
-            // Usuário não autenticado, redirecionar para login
-            window.location.href = '/login.html';
-        }
-    });
+    // Carregar tarefas
+    loadTasks();
     
     // Event Listeners
     addTaskBtn.addEventListener('click', () => openEditModal(null));
@@ -63,94 +37,30 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
     
-    // Função para obter headers com autenticação
-    function getAuthHeaders() {
-        return {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${authToken}`
-        };
-    }
-    
-    // Mostrar informações do usuário
-    function showUserInfo(user) {
-        // Adicionar informações do usuário no header se não existir
-        let userInfo = document.getElementById('userInfo');
-        if (!userInfo) {
-            userInfo = document.createElement('div');
-            userInfo.id = 'userInfo';
-            userInfo.style.cssText = `
-                position: absolute;
-                top: 20px;
-                right: 20px;
-                background: white;
-                padding: 10px 15px;
-                border-radius: 5px;
-                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-                display: flex;
-                align-items: center;
-                gap: 10px;
-            `;
-            
-            userInfo.innerHTML = `
-                <span>Olá, ${user.email}</span>
-                <button id="logoutBtn" style="
-                    background: #e74c3c;
-                    color: white;
-                    border: none;
-                    padding: 5px 10px;
-                    border-radius: 3px;
-                    cursor: pointer;
-                    font-size: 12px;
-                ">Sair</button>
-            `;
-            
-            document.body.appendChild(userInfo);
-            
-            // Event listener para logout
-            document.getElementById('logoutBtn').addEventListener('click', async () => {
-                try {
-                    await signOut(auth);
-                    window.location.href = '/login.html';
-                } catch (error) {
-                    console.error('Erro ao fazer logout:', error);
-                    showAlert('error', 'Erro ao fazer logout');
-                }
-            });
-        }
-    }
-
-    // Carregar tarefas do servidor
+    // Carregar tarefas do Parse
     async function loadTasks() {
         try {
-            const response = await fetch('/tasks', {
-                headers: getAuthHeaders()
-            });
+            const query = new Parse.Query(Task);
+            query.descending('createdAt');
             
-            if (response.status === 401) {
-                // Token expirado ou inválido
-                await signOut(auth);
-                window.location.href = '/login.html';
-                return;
-            }
-            
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            
-            const tasks = await response.json();
+            const tasks = await query.find();
             
             tasksContainer.innerHTML = '';
             
-            // Verificar se tasks é um array
-            if (Array.isArray(tasks)) {
-                tasks.forEach((task) => {
-                    const taskCard = createTaskCard(task);
-                    tasksContainer.appendChild(taskCard);
-                });
-            } else {
-                console.warn('Resposta da API não é um array:', tasks);
-                showAlert('warning', 'Formato de dados inesperado');
-            }
+            tasks.forEach((task) => {
+                const taskData = {
+                    id: task.id,
+                    title: task.get('title'),
+                    description: task.get('description'),
+                    priority: task.get('priority'),
+                    status: task.get('status'),
+                    units: task.get('units'),
+                    deadline: task.get('deadline')
+                };
+                
+                const taskCard = createTaskCard(taskData);
+                tasksContainer.appendChild(taskCard);
+            });
         } catch (error) {
             console.error('Erro ao carregar tarefas:', error);
             showAlert('error', 'Erro ao carregar tarefas');
@@ -207,25 +117,16 @@ document.addEventListener('DOMContentLoaded', () => {
             deleteBtn.style.display = 'block';
             
             try {
-                const response = await fetch(`/tasks/${taskId}`, {
-                    headers: getAuthHeaders()
-                });
-                
-                if (response.status === 401) {
-                    await signOut(auth);
-                    window.location.href = '/login.html';
-                    return;
-                }
-                
-                const task = await response.json();
+                const query = new Parse.Query(Task);
+                const task = await query.get(taskId);
                 
                 document.getElementById('editId').value = task.id;
-                document.getElementById('editTitle').value = task.title;
-                document.getElementById('editDescription').value = task.description;
-                document.getElementById('editPriority').value = task.priority;
-                document.getElementById('editStatus').value = task.status;
-                document.getElementById('editUnits').value = task.units;
-                document.getElementById('editDeadline').value = task.deadline;
+                document.getElementById('editTitle').value = task.get('title');
+                document.getElementById('editDescription').value = task.get('description');
+                document.getElementById('editPriority').value = task.get('priority');
+                document.getElementById('editStatus').value = task.get('status');
+                document.getElementById('editUnits').value = task.get('units');
+                document.getElementById('editDeadline').value = task.get('deadline');
             } catch (error) {
                 console.error('Erro ao carregar tarefa:', error);
                 showAlert('error', 'Erro ao carregar tarefa');
@@ -253,37 +154,36 @@ document.addEventListener('DOMContentLoaded', () => {
             priority: document.getElementById('editPriority').value,
             status: document.getElementById('editStatus').value,
             units: document.getElementById('editUnits').value,
-            deadline: document.getElementById('editDeadline').value
+            deadline: parseInt(document.getElementById('editDeadline').value)
         };
         
         try {
-            let response;
+            let task;
             
             if (currentTaskId) {
                 // Atualizar tarefa existente
-                response = await fetch(`/tasks/${currentTaskId}`, {
-                    method: 'PUT',
-                    headers: getAuthHeaders(),
-                    body: JSON.stringify(taskData)
-                });
+                const query = new Parse.Query(Task);
+                task = await query.get(currentTaskId);
+                
+                task.set('title', taskData.title);
+                task.set('description', taskData.description);
+                task.set('priority', taskData.priority);
+                task.set('status', taskData.status);
+                task.set('units', taskData.units);
+                task.set('deadline', taskData.deadline);
             } else {
                 // Criar nova tarefa
-                response = await fetch('/tasks', {
-                    method: 'POST',
-                    headers: getAuthHeaders(),
-                    body: JSON.stringify(taskData)
-                });
+                task = new Task();
+                
+                task.set('title', taskData.title);
+                task.set('description', taskData.description);
+                task.set('priority', taskData.priority);
+                task.set('status', taskData.status);
+                task.set('units', taskData.units);
+                task.set('deadline', taskData.deadline);
             }
             
-            if (response.status === 401) {
-                await signOut(auth);
-                window.location.href = '/login.html';
-                return;
-            }
-            
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
+            await task.save();
             
             showAlert('success', currentTaskId ? 'Tarefa atualizada com sucesso!' : 'Tarefa criada com sucesso!');
             closeModal();
@@ -301,20 +201,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!confirm('Tem certeza que deseja excluir esta tarefa?')) return;
         
         try {
-            const response = await fetch(`/tasks/${currentTaskId}`, {
-                method: 'DELETE',
-                headers: getAuthHeaders()
-            });
+            const query = new Parse.Query(Task);
+            const task = await query.get(currentTaskId);
             
-            if (response.status === 401) {
-                await signOut(auth);
-                window.location.href = '/login.html';
-                return;
-            }
-            
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
+            await task.destroy();
             
             showAlert('success', 'Tarefa excluída com sucesso!');
             closeModal();
