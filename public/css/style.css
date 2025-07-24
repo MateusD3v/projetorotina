@@ -392,3 +392,51 @@ h1 {
         min-width: auto;
     }
 }
+
+/* Estilos para alertas */
+.alert {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 1rem 1.5rem;
+    border-radius: 4px;
+    color: white;
+    font-weight: 600;
+    z-index: 9999;
+    min-width: 300px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    animation: slideInRight 0.3s ease-out;
+}
+
+.alert-success {
+    background-color: var(--success);
+}
+
+.alert-error {
+    background-color: var(--danger);
+}
+
+.alert-warning {
+    background-color: var(--warning);
+    color: #333;
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* Responsividade para alertas */
+@media (max-width: 480px) {
+    .alert {
+        right: 10px;
+        left: 10px;
+        min-width: auto;
+    }
+}

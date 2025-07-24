@@ -1,14 +1,8 @@
 require('dotenv').config();
 const express = require('express');
-const admin = require('firebase-admin');
+const admin = require('./config/firebase');
 const path = require('path');
 const tasksRouter = require('./routes/tasks');
-
-// Inicializa o Firebase Admin
-const serviceAccount = require('./serviceAccountKey.json');
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount)
-});
 
 const app = express();
 

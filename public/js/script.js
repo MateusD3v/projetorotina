@@ -31,14 +31,25 @@ document.addEventListener('DOMContentLoaded', () => {
     async function loadTasks() {
         try {
             const response = await fetch('/tasks');
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
             const tasks = await response.json();
             
             tasksContainer.innerHTML = '';
             
-            tasks.forEach((task) => {
-                const taskCard = createTaskCard(task);
-                tasksContainer.appendChild(taskCard);
-            });
+            // Verificar se tasks é um array
+            if (Array.isArray(tasks)) {
+                tasks.forEach((task) => {
+                    const taskCard = createTaskCard(task);
+                    tasksContainer.appendChild(taskCard);
+                });
+            } else {
+                console.warn('Resposta da API não é um array:', tasks);
+                showAlert('warning', 'Formato de dados inesperado');
+            }
         } catch (error) {
             console.error('Erro ao carregar tarefas:', error);
             showAlert('error', 'Erro ao carregar tarefas');

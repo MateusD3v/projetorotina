@@ -1,4 +1,4 @@
-const admin = require('firebase-admin');
+const admin = require('../config/firebase');
 const db = admin.firestore();
 const tasksRef = db.collection('tasks');
 
