@@ -1,3 +1,24 @@
+// Importar Firebase (usando CDN)
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+
+// IMPORTANTE: Substitua pela configuração do seu projeto Firebase
+const firebaseConfig = {
+    apiKey: "sua-api-key-aqui",
+    authDomain: "projetorotinha.firebaseapp.com",
+    projectId: "projetorotinha",
+    storageBucket: "projetorotinha.appspot.com",
+    messagingSenderId: "123456789",
+    appId: "1:123456789:web:abcdef123456"
+};
+
+// Inicializar Firebase
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+
+let currentUser = null;
+let authToken = null;
+
 document.addEventListener('DOMContentLoaded', () => {
     const tasksContainer = document.getElementById('tasksContainer');
     const addTaskBtn = document.getElementById('addTaskBtn');
@@ -10,8 +31,23 @@ document.addEventListener('DOMContentLoaded', () => {
     
     let currentTaskId = null;
     
-    // Carregar tarefas ao iniciar
-    loadTasks();
+    // Verificar autenticação
+    onAuthStateChanged(auth, async (user) => {
+        if (user) {
+            currentUser = user;
+            authToken = await user.getIdToken();
+            console.log('Usuário autenticado:', user.email);
+            
+            // Mostrar informações do usuário
+            showUserInfo(user);
+            
+            // Carregar tarefas
+            loadTasks();
+        } else {
+            // Usuário não autenticado, redirecionar para login
+            window.location.href = '/login.html';
+        }
+    });
     
     // Event Listeners
     addTaskBtn.addEventListener('click', () => openEditModal(null));
@@ -27,10 +63,75 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
     
+    // Função para obter headers com autenticação
+    function getAuthHeaders() {
+        return {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${authToken}`
+        };
+    }
+    
+    // Mostrar informações do usuário
+    function showUserInfo(user) {
+        // Adicionar informações do usuário no header se não existir
+        let userInfo = document.getElementById('userInfo');
+        if (!userInfo) {
+            userInfo = document.createElement('div');
+            userInfo.id = 'userInfo';
+            userInfo.style.cssText = `
+                position: absolute;
+                top: 20px;
+                right: 20px;
+                background: white;
+                padding: 10px 15px;
+                border-radius: 5px;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            `;
+            
+            userInfo.innerHTML = `
+                <span>Olá, ${user.email}</span>
+                <button id="logoutBtn" style="
+                    background: #e74c3c;
+                    color: white;
+                    border: none;
+                    padding: 5px 10px;
+                    border-radius: 3px;
+                    cursor: pointer;
+                    font-size: 12px;
+                ">Sair</button>
+            `;
+            
+            document.body.appendChild(userInfo);
+            
+            // Event listener para logout
+            document.getElementById('logoutBtn').addEventListener('click', async () => {
+                try {
+                    await signOut(auth);
+                    window.location.href = '/login.html';
+                } catch (error) {
+                    console.error('Erro ao fazer logout:', error);
+                    showAlert('error', 'Erro ao fazer logout');
+                }
+            });
+        }
+    }
+
     // Carregar tarefas do servidor
     async function loadTasks() {
         try {
-            const response = await fetch('/tasks');
+            const response = await fetch('/tasks', {
+                headers: getAuthHeaders()
+            });
+            
+            if (response.status === 401) {
+                // Token expirado ou inválido
+                await signOut(auth);
+                window.location.href = '/login.html';
+                return;
+            }
             
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
@@ -106,7 +207,16 @@ document.addEventListener('DOMContentLoaded', () => {
             deleteBtn.style.display = 'block';
             
             try {
-                const response = await fetch(`/tasks/${taskId}`);
+                const response = await fetch(`/tasks/${taskId}`, {
+                    headers: getAuthHeaders()
+                });
+                
+                if (response.status === 401) {
+                    await signOut(auth);
+                    window.location.href = '/login.html';
+                    return;
+                }
+                
                 const task = await response.json();
                 
                 document.getElementById('editId').value = task.id;
@@ -147,28 +257,35 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         
         try {
+            let response;
+            
             if (currentTaskId) {
                 // Atualizar tarefa existente
-                await fetch(`/tasks/${currentTaskId}`, {
+                response = await fetch(`/tasks/${currentTaskId}`, {
                     method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    headers: getAuthHeaders(),
                     body: JSON.stringify(taskData)
                 });
-                showAlert('success', 'Tarefa atualizada com sucesso!');
             } else {
                 // Criar nova tarefa
-                await fetch('/tasks', {
+                response = await fetch('/tasks', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    headers: getAuthHeaders(),
                     body: JSON.stringify(taskData)
                 });
-                showAlert('success', 'Tarefa criada com sucesso!');
             }
             
+            if (response.status === 401) {
+                await signOut(auth);
+                window.location.href = '/login.html';
+                return;
+            }
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            showAlert('success', currentTaskId ? 'Tarefa atualizada com sucesso!' : 'Tarefa criada com sucesso!');
             closeModal();
             loadTasks();
         } catch (error) {
@@ -184,9 +301,20 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!confirm('Tem certeza que deseja excluir esta tarefa?')) return;
         
         try {
-            await fetch(`/tasks/${currentTaskId}`, {
-                method: 'DELETE'
+            const response = await fetch(`/tasks/${currentTaskId}`, {
+                method: 'DELETE',
+                headers: getAuthHeaders()
             });
+            
+            if (response.status === 401) {
+                await signOut(auth);
+                window.location.href = '/login.html';
+                return;
+            }
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
             
             showAlert('success', 'Tarefa excluída com sucesso!');
             closeModal();

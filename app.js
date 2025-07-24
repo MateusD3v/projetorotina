@@ -20,6 +20,11 @@ app.get('/', (req, res) => {
   res.render('index');
 });
 
+// Rota para página de login
+app.get('/login.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'views', 'login.html'));
+});
+
 // Iniciar servidor
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

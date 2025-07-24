@@ -12,7 +12,7 @@ const path = require('path');
 console.log('🔥 Testando Configuração do Firebase...\n');
 
 // 1. Verificar arquivo de credenciais
-const credentialsPath = path.join(__dirname, 'projetorotinha-firebase-adminsdk-fbsvc-c76ecbddbf.json');
+const credentialsPath = path.join(__dirname, 'projetorotinha-firebase-adminsdk-fbsvc-b4c5939855.json');
 console.log('1. Verificando arquivo de credenciais...');
 
 if (fs.existsSync(credentialsPath)) {
@@ -50,7 +50,7 @@ console.log('\n3. Testando conexão com Firebase...');
 
 try {
     const admin = require('firebase-admin');
-    const serviceAccount = require('./projetorotinha-firebase-adminsdk-fbsvc-c76ecbddbf.json');
+    const serviceAccount = require('./projetorotinha-firebase-adminsdk-fbsvc-b4c5939855.json');
     
     // Verificar se já foi inicializado
     if (admin.apps.length === 0) {

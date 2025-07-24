@@ -1,5 +1,5 @@
 const admin = require('firebase-admin');
-const serviceAccount = require('../projetorotinha-firebase-adminsdk-fbsvc-c76ecbddbf.json');
+const serviceAccount = require('../projetorotinha-firebase-adminsdk-fbsvc-b4c5939855.json');
 
 // Inicializa o Firebase Admin apenas uma vez
 if (!admin.apps.length) {

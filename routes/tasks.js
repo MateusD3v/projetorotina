@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Task = require('../models/Task');
+const { verifyToken } = require('../middleware/auth');
 
 // Dados mock para teste
 const mockTasks = [
@@ -34,64 +35,71 @@ router.get('/mock', (req, res) => {
   res.json(mockTasks);
 });
 
-router.get('/', async (req, res) => {
+// Buscar todas as tarefas do usuário autenticado
+router.get('/', verifyToken, async (req, res) => {
   try {
-    console.log('Tentando buscar todas as tarefas...');
-    const tasks = await Task.getAll();
+    console.log(`Buscando tarefas para usuário: ${req.user.email}`);
+    const tasks = await Task.getAll(req.user.uid);
     console.log('Tarefas encontradas:', tasks.length);
     res.json(tasks);
   } catch (error) {
     console.error('Erro ao buscar tarefas:', error);
-    console.log('Usando dados mock como fallback...');
-    // Usar dados mock como fallback quando Firebase falha
-    res.json(mockTasks);
+    res.status(500).json({ 
+      error: 'Erro ao buscar tarefas',
+      details: error.message 
+    });
   }
 });
 
-router.post('/', async (req, res) => {
+// Criar nova tarefa para o usuário autenticado
+router.post('/', verifyToken, async (req, res) => {
   try {
-    console.log('Tentando criar nova tarefa:', req.body);
-    const newTask = await Task.create(req.body);
+    console.log(`Criando tarefa para usuário: ${req.user.email}`);
+    const newTask = await Task.create(req.body, req.user.uid);
     console.log('Tarefa criada com sucesso:', newTask.id);
     res.status(201).json(newTask);
   } catch (error) {
     console.error('Erro ao criar tarefa:', error);
-    console.log('Simulando criação de tarefa com dados mock...');
-    // Simular criação de tarefa quando Firebase falha
-    const mockNewTask = {
-      id: Date.now().toString(),
-      ...req.body,
-      createdAt: new Date().toISOString()
-    };
-    mockTasks.push(mockNewTask);
-    res.status(201).json(mockNewTask);
+    res.status(500).json({ 
+      error: 'Erro ao criar tarefa',
+      details: error.message 
+    });
   }
 });
 
-router.get('/:id', async (req, res) => {
+// Buscar tarefa específica do usuário autenticado
+router.get('/:id', verifyToken, async (req, res) => {
   try {
-    const task = await Task.getById(req.params.id);
+    const task = await Task.getById(req.params.id, req.user.uid);
     res.json(task);
   } catch (error) {
-    res.status(404).json({ error: error.message });
+    const statusCode = error.message.includes('não encontrada') ? 404 : 
+                      error.message.includes('Acesso negado') ? 403 : 500;
+    res.status(statusCode).json({ error: error.message });
   }
 });
 
-router.put('/:id', async (req, res) => {
+// Atualizar tarefa do usuário autenticado
+router.put('/:id', verifyToken, async (req, res) => {
   try {
-    const updatedTask = await Task.update(req.params.id, req.body);
+    const updatedTask = await Task.update(req.params.id, req.body, req.user.uid);
     res.json(updatedTask);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    const statusCode = error.message.includes('não encontrada') ? 404 : 
+                      error.message.includes('Acesso negado') ? 403 : 500;
+    res.status(statusCode).json({ error: error.message });
   }
 });
 
-router.delete('/:id', async (req, res) => {
+// Excluir tarefa do usuário autenticado
+router.delete('/:id', verifyToken, async (req, res) => {
   try {
-    const result = await Task.delete(req.params.id);
+    const result = await Task.delete(req.params.id, req.user.uid);
     res.json(result);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    const statusCode = error.message.includes('não encontrada') ? 404 : 
+                      error.message.includes('Acesso negado') ? 403 : 500;
+    res.status(statusCode).json({ error: error.message });
   }
 });
 
