@@ -74,8 +74,18 @@ document.addEventListener('DOMContentLoaded', () => {
         taskCard.dataset.id = task.id;
         
         let statusClass = 'status-pending';
-        if (task.status === 'Em Andamento') statusClass = 'status-in-progress';
-        if (task.status === 'Concluído') statusClass = 'status-completed';
+        let cardStatusClass = 'status-pending';
+        if (task.status === 'Em Andamento') {
+            statusClass = 'status-in-progress';
+            cardStatusClass = 'status-in-progress';
+        }
+        if (task.status === 'Concluído') {
+            statusClass = 'status-completed';
+            cardStatusClass = 'status-completed';
+        }
+        
+        // Adicionar classe de status ao card para a linha colorida
+        taskCard.classList.add(cardStatusClass);
         
         taskCard.innerHTML = `
             <div class="task-header">
@@ -97,11 +107,18 @@ document.addEventListener('DOMContentLoaded', () => {
                     <span class="detail-value">${task.deadline} dias</span>
                 </div>
             </div>
-            <button class="edit-btn">Editar Tarefa</button>
+            <div class="task-actions">
+                <button class="edit-btn">✏️ Editar</button>
+                <button class="delete-btn">🗑️ Excluir</button>
+            </div>
         `;
         
         taskCard.querySelector('.edit-btn').addEventListener('click', () => {
             openEditModal(task.id);
+        });
+        
+        taskCard.querySelector('.delete-btn').addEventListener('click', () => {
+            deleteTaskDirectly(task.id);
         });
         
         return taskCard;
@@ -154,7 +171,7 @@ document.addEventListener('DOMContentLoaded', () => {
             priority: document.getElementById('editPriority').value,
             status: document.getElementById('editStatus').value,
             units: document.getElementById('editUnits').value,
-            deadline: parseInt(document.getElementById('editDeadline').value)
+            deadline: document.getElementById('editDeadline').value
         };
         
         try {
@@ -208,6 +225,24 @@ document.addEventListener('DOMContentLoaded', () => {
             
             showAlert('success', 'Tarefa excluída com sucesso!');
             closeModal();
+            loadTasks();
+        } catch (error) {
+            console.error('Erro ao excluir tarefa:', error);
+            showAlert('error', 'Erro ao excluir tarefa');
+        }
+    }
+    
+    // Excluir tarefa diretamente do card
+    async function deleteTaskDirectly(taskId) {
+        if (!confirm('Tem certeza que deseja excluir esta tarefa?')) return;
+        
+        try {
+            const query = new Parse.Query(Task);
+            const task = await query.get(taskId);
+            
+            await task.destroy();
+            
+            showAlert('success', 'Tarefa excluída com sucesso!');
             loadTasks();
         } catch (error) {
             console.error('Erro ao excluir tarefa:', error);

@@ -58,13 +58,38 @@ h1 {
 }
 
 .task-card {
-    background: white;
+    background: white !important;
     border-radius: 8px;
     box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     padding: 1.5rem;
     transition: all 0.3s ease;
     display: flex;
     flex-direction: column;
+    position: relative;
+}
+
+.task-card::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background-color: var(--gray);
+    border-radius: 8px 0 0 8px;
+    transition: background-color 0.3s ease;
+}
+
+.task-card.status-pending::before {
+    background-color: var(--warning);
+}
+
+.task-card.status-in-progress::before {
+    background-color: var(--accent);
+}
+
+.task-card.status-completed::before {
+    background-color: var(--success);
 }
 
 .task-card:hover {
@@ -142,35 +167,57 @@ h1 {
     font-size: 0.9rem;
 }
 
-.edit-btn, .add-btn {
-    background-color: var(--accent);
-    color: white;
+.task-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: auto;
+}
+
+.edit-btn, .delete-btn, .add-btn {
     border: none;
-    padding: 0.75rem 1rem;
+    padding: 0.5rem 1rem;
     border-radius: 4px;
     cursor: pointer;
-    margin-top: auto;
-    width: 100%;
     transition: all 0.2s;
     font-weight: 600;
     text-align: center;
-    display: inline-block;
+    font-size: 0.9rem;
+    flex: 1;
 }
 
-.edit-btn:hover, .add-btn:hover {
+.edit-btn {
+    background-color: var(--accent);
+    color: white;
+}
+
+.edit-btn:hover {
     background-color: #2980b9;
+    transform: translateY(-2px);
+}
+
+.delete-btn {
+    background-color: var(--danger);
+    color: white;
+}
+
+.delete-btn:hover {
+    background-color: #c0392b;
     transform: translateY(-2px);
 }
 
 .add-btn {
     background-color: var(--success);
+    color: white;
     max-width: 250px;
     margin: 0 auto;
     display: block;
+    width: 100%;
+    padding: 0.75rem 1rem;
 }
 
 .add-btn:hover {
     background-color: #27ae60;
+    transform: translateY(-2px);
 }
 
 .modal {
