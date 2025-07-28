@@ -4,9 +4,26 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Rotina de Manutenção de TI</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h3>Menu</h3>
+            <div class="menu-toggle" id="menuToggle">
+                <i class="fas fa-ellipsis-v"></i>
+            </div>
+        </div>
+        <ul class="sidebar-menu">
+            <li class="active"><a href="#"><i class="fas fa-tasks"></i> Tarefas</a></li>
+            <li><a href="#" id="openImageUploadBtn"><i class="fas fa-images"></i> Imagens</a></li>
+            <li><a href="#" id="loginBtn"><i class="fas fa-sign-in-alt"></i> Login</a></li>
+            <li class="menu-item-hidden" id="myProfileMenu"><a href="#"><i class="fas fa-user"></i> Meu</a></li>
+        </ul>
+    </div>
+    
     <div class="container">
         <header>
             <h1>Sistema de Controle de Tarefas</h1>
@@ -66,6 +83,90 @@
                     <button type="button" class="btn btn-danger" id="deleteBtn" style="display: none;">Excluir</button>
                 </div>
             </form>
+        </div>
+    </div>
+    
+    <!-- Modal de Upload de Imagens -->
+    <div class="modal" id="imageUploadModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Upload de Imagens</h2>
+                <span class="close-btn" id="closeImageModalBtn">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="upload-area" id="uploadArea">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <p>Arraste e solte imagens aqui ou</p>
+                    <label for="imageInput" class="upload-btn">Selecionar Imagens</label>
+                    <input type="file" id="imageInput" accept="image/*" multiple style="display: none;">
+                </div>
+                
+                <div class="upload-preview" id="uploadPreview">
+                    <h3>Imagens selecionadas:</h3>
+                    <div class="preview-container" id="previewContainer"></div>
+                    <button class="btn btn-primary" id="uploadImagesBtn" disabled>Fazer Upload</button>
+                </div>
+                
+                <div class="images-gallery" id="imagesGallery">
+                    <h3>Galeria de Imagens</h3>
+                    <div class="gallery-container" id="galleryContainer"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal de Visualização de Imagem -->
+    <div class="modal" id="imageViewModal">
+        <div class="modal-content image-view-content">
+            <span class="close-btn" id="closeViewModalBtn">&times;</span>
+            <img id="fullImage" src="" alt="Imagem em tamanho completo">
+            <div class="image-actions">
+                <button class="btn btn-danger" id="deleteImageBtn">Excluir Imagem</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal de Login/Cadastro -->
+    <div class="modal" id="authModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="authModalTitle">Login</h2>
+                <span class="close-btn" id="closeAuthModalBtn">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="auth-tabs">
+                    <button class="auth-tab-btn active" id="loginTabBtn">Login</button>
+                    <button class="auth-tab-btn" id="signupTabBtn">Cadastro</button>
+                </div>
+                
+                <div class="auth-form" id="loginForm">
+                    <div class="form-group">
+                        <label for="loginUsername">Usuário:</label>
+                        <input type="text" id="loginUsername" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="loginPassword">Senha:</label>
+                        <input type="password" id="loginPassword" required>
+                    </div>
+                    <button type="button" class="btn btn-primary" id="submitLoginBtn">Entrar</button>
+                </div>
+                
+                <div class="auth-form" id="signupForm" style="display: none;">
+                    <div class="form-group">
+                        <label for="signupUsername">Usuário:</label>
+                        <input type="text" id="signupUsername" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="signupEmail">Email:</label>
+                        <input type="email" id="signupEmail" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="signupPassword">Senha:</label>
+                        <input type="password" id="signupPassword" required>
+                    </div>
+                    <button type="button" class="btn btn-primary" id="submitSignupBtn">Cadastrar</button>
+                </div>
+            </div>
         </div>
     </div>
     
