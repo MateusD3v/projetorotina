@@ -61,3 +61,5 @@ back4app-config.json
 
 # Arquivos de documentação temporários
 *.tmp.md
+node_modules/jake/test/unit/namespace.js
+*.js

@@ -21,9 +21,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const deleteBtn = document.getElementById('deleteBtn');
     const taskForm = document.getElementById('taskForm');
     
-    // Elementos do menu de três pontos
-    const menuToggle = document.getElementById('menuToggle');
-    const myProfileMenu = document.getElementById('myProfileMenu');
+    // Elementos do DOM
+const floatingMenuBtn = document.getElementById('floatingMenuBtn');
+const popupMenu = document.getElementById('popupMenu');
+const popupOverlay = document.getElementById('popupOverlay');
+const closeMenuBtn = document.getElementById('closeMenuBtn');
+const myProfileMenu = document.getElementById('myProfileMenu');
     
     // Elementos do modal de upload de imagens
     const openImageUploadBtn = document.getElementById('openImageUploadBtn');
@@ -51,15 +54,65 @@ document.addEventListener('DOMContentLoaded', () => {
     const closeViewModalBtn = document.getElementById('closeViewModalBtn');
     const fullImage = document.getElementById('fullImage');
     const deleteImageBtn = document.getElementById('deleteImageBtn');
+    const imageContainer = document.getElementById('imageContainer');
+    const zoomBtn = document.getElementById('zoomBtn');
+    const fullscreenBtn = document.getElementById('fullscreenBtn');
+    const zoomIndicator = document.getElementById('zoomIndicator');
+    const prevImageBtn = document.getElementById('prevImageBtn');
+    const nextImageBtn = document.getElementById('nextImageBtn');
+    const imageCounter = document.getElementById('imageCounter');
     
     let currentTaskId = null;
     let selectedFiles = [];
     let currentImageId = null;
+    let allImages = [];
+    let currentImageIndex = 0;
+    let isZoomed = false;
+    let zoomLevel = 1;
+    let isDragging = false;
+    let startX, startY, scrollLeft, scrollTop;
     
     // Funções de autenticação
     function openAuthModal() {
         authModal.style.display = 'flex';
     }
+
+    // Event listeners para o pop-up menu
+    floatingMenuBtn.addEventListener('click', function() {
+        popupMenu.classList.add('active');
+        popupOverlay.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    });
+
+    closeMenuBtn.addEventListener('click', function() {
+        closePopupMenu();
+    });
+
+    popupOverlay.addEventListener('click', function() {
+        closePopupMenu();
+    });
+
+    // Função para fechar o pop-up menu
+    function closePopupMenu() {
+        popupMenu.classList.remove('active');
+        popupOverlay.classList.remove('active');
+        document.body.style.overflow = 'auto';
+    }
+
+    // Fechar menu com tecla ESC
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && popupMenu.classList.contains('active')) {
+            closePopupMenu();
+        }
+    });
+
+    // Fechar menu ao clicar em um item
+    const menuItems = document.querySelectorAll('.popup-menu-list li a');
+    menuItems.forEach(item => {
+        item.addEventListener('click', function() {
+            closePopupMenu();
+        });
+    });
     
     function closeAuthModal() {
         authModal.style.display = 'none';
@@ -165,10 +218,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
-    // Funcionalidade do menu de três pontos
-    menuToggle.addEventListener('click', () => {
-        myProfileMenu.classList.toggle('menu-item-hidden');
-    });
+
     
     // Carregar tarefas
     loadTasks();
@@ -198,6 +248,24 @@ document.addEventListener('DOMContentLoaded', () => {
     
     closeViewModalBtn.addEventListener('click', closeImageViewModal);
     deleteImageBtn.addEventListener('click', deleteImage);
+    
+    // Event Listeners para controles de imagem
+    zoomBtn.addEventListener('click', toggleZoom);
+    fullscreenBtn.addEventListener('click', toggleFullscreen);
+    prevImageBtn.addEventListener('click', showPreviousImage);
+    nextImageBtn.addEventListener('click', showNextImage);
+    
+    // Event Listeners para zoom com clique na imagem
+    fullImage.addEventListener('click', toggleZoom);
+    
+    // Event Listeners para arrastar imagem quando com zoom
+    imageContainer.addEventListener('mousedown', startDrag);
+    imageContainer.addEventListener('mousemove', drag);
+    imageContainer.addEventListener('mouseup', endDrag);
+    imageContainer.addEventListener('mouseleave', endDrag);
+    
+    // Event Listeners para navegação com teclado
+    document.addEventListener('keydown', handleKeyNavigation);
     
     // Event Listeners para autenticação
     loginBtn.addEventListener('click', openAuthModal);
@@ -589,12 +657,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
             
+            // Limpar e popular o array de todas as imagens
+            allImages = [];
+            
             images.forEach((image) => {
                 const imageData = {
                     id: image.id,
                     url: image.get('file').url(),
                     name: image.get('name')
                 };
+                
+                // Adicionar ao array de todas as imagens
+                allImages.push(imageData);
                 
                 const galleryItem = createGalleryItem(imageData);
                 galleryContainer.appendChild(galleryItem);
@@ -625,7 +699,15 @@ document.addEventListener('DOMContentLoaded', () => {
     
     function openImageViewModal(image) {
         currentImageId = image.id;
-        fullImage.src = image.url;
+        
+        // Encontrar o índice da imagem atual no array
+        currentImageIndex = allImages.findIndex(img => img.id === image.id);
+        
+        displayCurrentImage();
+        updateNavigationButtons();
+        updateImageCounter();
+        resetZoom();
+        
         imageViewModal.style.display = 'flex';
     }
     
@@ -633,7 +715,196 @@ document.addEventListener('DOMContentLoaded', () => {
         imageViewModal.style.display = 'none';
         fullImage.src = '';
         currentImageId = null;
+        resetZoom();
+        exitFullscreen();
     }
+    
+    // Funções para controles de imagem
+    function displayCurrentImage() {
+        if (allImages.length > 0 && currentImageIndex >= 0 && currentImageIndex < allImages.length) {
+            const currentImage = allImages[currentImageIndex];
+            fullImage.src = currentImage.url;
+            currentImageId = currentImage.id;
+        }
+    }
+    
+    function updateNavigationButtons() {
+        prevImageBtn.disabled = currentImageIndex <= 0;
+        nextImageBtn.disabled = currentImageIndex >= allImages.length - 1;
+        
+        // Esconder botões se há apenas uma imagem
+        if (allImages.length <= 1) {
+            prevImageBtn.style.display = 'none';
+            nextImageBtn.style.display = 'none';
+        } else {
+            prevImageBtn.style.display = 'flex';
+            nextImageBtn.style.display = 'flex';
+        }
+    }
+    
+    function updateImageCounter() {
+        if (allImages.length > 0) {
+            imageCounter.textContent = `${currentImageIndex + 1} de ${allImages.length}`;
+        }
+    }
+    
+    function showPreviousImage() {
+        if (currentImageIndex > 0) {
+            currentImageIndex--;
+            displayCurrentImage();
+            updateNavigationButtons();
+            updateImageCounter();
+            resetZoom();
+        }
+    }
+    
+    function showNextImage() {
+        if (currentImageIndex < allImages.length - 1) {
+            currentImageIndex++;
+            displayCurrentImage();
+            updateNavigationButtons();
+            updateImageCounter();
+            resetZoom();
+        }
+    }
+    
+    function toggleZoom() {
+        if (isZoomed) {
+            resetZoom();
+        } else {
+            zoomIn();
+        }
+    }
+    
+    function zoomIn() {
+        isZoomed = true;
+        zoomLevel = 2;
+        fullImage.classList.add('zoomed');
+        imageContainer.classList.add('zoomed');
+        zoomBtn.innerHTML = '<i class="fas fa-search-minus"></i>';
+        zoomBtn.title = 'Reduzir zoom';
+        zoomIndicator.textContent = '200%';
+        zoomIndicator.style.display = 'block';
+    }
+    
+    function resetZoom() {
+        isZoomed = false;
+        zoomLevel = 1;
+        fullImage.classList.remove('zoomed');
+        imageContainer.classList.remove('zoomed');
+        zoomBtn.innerHTML = '<i class="fas fa-search-plus"></i>';
+        zoomBtn.title = 'Zoom';
+        zoomIndicator.style.display = 'none';
+        imageContainer.scrollLeft = 0;
+        imageContainer.scrollTop = 0;
+        
+        // Restaurar object-fit baseado no estado da tela cheia
+        if (document.fullscreenElement) {
+            fullImage.style.objectFit = 'cover';
+        } else {
+            fullImage.style.objectFit = 'contain';
+        }
+    }
+    
+    function toggleFullscreen() {
+        if (!document.fullscreenElement) {
+            imageViewModal.requestFullscreen().catch(err => {
+                console.log('Erro ao entrar em tela cheia:', err);
+            });
+            fullscreenBtn.innerHTML = '<i class="fas fa-compress"></i>';
+            fullscreenBtn.title = 'Sair da tela cheia';
+            
+            // Resetar zoom ao entrar em tela cheia para melhor visualização
+            setTimeout(() => {
+                resetZoom();
+            }, 100);
+        } else {
+            document.exitFullscreen();
+        }
+    }
+    
+    function exitFullscreen() {
+        if (document.fullscreenElement) {
+            document.exitFullscreen();
+        }
+        fullscreenBtn.innerHTML = '<i class="fas fa-expand"></i>';
+        fullscreenBtn.title = 'Tela cheia';
+    }
+    
+    // Funções para arrastar imagem com zoom
+    function startDrag(e) {
+        if (!isZoomed) return;
+        
+        isDragging = true;
+        startX = e.pageX - imageContainer.offsetLeft;
+        startY = e.pageY - imageContainer.offsetTop;
+        scrollLeft = imageContainer.scrollLeft;
+        scrollTop = imageContainer.scrollTop;
+        imageContainer.style.cursor = 'grabbing';
+    }
+    
+    function drag(e) {
+        if (!isDragging || !isZoomed) return;
+        
+        e.preventDefault();
+        const x = e.pageX - imageContainer.offsetLeft;
+        const y = e.pageY - imageContainer.offsetTop;
+        const walkX = (x - startX) * 2;
+        const walkY = (y - startY) * 2;
+        imageContainer.scrollLeft = scrollLeft - walkX;
+        imageContainer.scrollTop = scrollTop - walkY;
+    }
+    
+    function endDrag() {
+        isDragging = false;
+        if (isZoomed) {
+            imageContainer.style.cursor = 'zoom-out';
+        }
+    }
+    
+    // Navegação com teclado
+    function handleKeyNavigation(e) {
+        if (imageViewModal.style.display !== 'flex') return;
+        
+        switch(e.key) {
+            case 'ArrowLeft':
+                showPreviousImage();
+                break;
+            case 'ArrowRight':
+                showNextImage();
+                break;
+            case 'Escape':
+                closeImageViewModal();
+                break;
+            case ' ':
+                e.preventDefault();
+                toggleZoom();
+                break;
+            case 'f':
+            case 'F':
+                toggleFullscreen();
+                break;
+        }
+    }
+    
+    // Event listener para mudanças de tela cheia
+    document.addEventListener('fullscreenchange', () => {
+        if (!document.fullscreenElement) {
+            fullscreenBtn.innerHTML = '<i class="fas fa-expand"></i>';
+            fullscreenBtn.title = 'Tela cheia';
+            
+            // Resetar zoom ao sair da tela cheia
+            setTimeout(() => {
+                resetZoom();
+            }, 100);
+        } else {
+            // Quando entrar em tela cheia, garantir que a imagem preencha a tela
+            setTimeout(() => {
+                resetZoom();
+                fullImage.style.objectFit = 'cover';
+            }, 100);
+        }
+    });
     
     async function deleteImage() {
         if (!currentImageId) return;
@@ -661,8 +932,28 @@ document.addEventListener('DOMContentLoaded', () => {
             
             await image.destroy();
             
+            // Remover a imagem do array allImages
+            allImages = allImages.filter(img => img.id !== currentImageId);
+            
             showAlert('success', 'Imagem excluída com sucesso!');
-            closeImageViewModal();
+            
+            // Se ainda há imagens, navegar para a próxima ou anterior
+            if (allImages.length > 0) {
+                // Se estamos na última imagem, voltar uma posição
+                if (currentImageIndex >= allImages.length) {
+                    currentImageIndex = allImages.length - 1;
+                }
+                
+                displayCurrentImage();
+                updateNavigationButtons();
+                updateImageCounter();
+                resetZoom();
+            } else {
+                // Se não há mais imagens, fechar o modal
+                closeImageViewModal();
+            }
+            
+            // Recarregar a galeria para atualizar a visualização
             loadImages();
         } catch (error) {
             console.error('Erro ao excluir imagem:', error);

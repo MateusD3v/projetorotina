@@ -9,20 +9,29 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-    <div class="sidebar">
-        <div class="sidebar-header">
+    <!-- Floating Menu Button -->
+    <div class="floating-menu-btn" id="floatingMenuBtn">
+        <i class="fas fa-ellipsis-v"></i>
+    </div>
+
+    <!-- Pop-up Menu -->
+    <div class="popup-menu" id="popupMenu">
+        <div class="popup-header">
             <h3>Menu</h3>
-            <div class="menu-toggle" id="menuToggle">
-                <i class="fas fa-ellipsis-v"></i>
-            </div>
+            <button class="close-btn" id="closeMenuBtn">
+                <i class="fas fa-times"></i>
+            </button>
         </div>
-        <ul class="sidebar-menu">
-            <li class="active"><a href="#"><i class="fas fa-tasks"></i> Tarefas</a></li>
-            <li><a href="#" id="openImageUploadBtn"><i class="fas fa-images"></i> Imagens</a></li>
-            <li><a href="#" id="loginBtn"><i class="fas fa-sign-in-alt"></i> Login</a></li>
-            <li class="menu-item-hidden" id="myProfileMenu"><a href="#"><i class="fas fa-user"></i> Meu</a></li>
+        <ul class="popup-menu-list">
+            <li class="active"><a href="#"><i class="fas fa-tasks"></i> <span>Tarefas</span></a></li>
+            <li><a href="#" id="openImageUploadBtn"><i class="fas fa-images"></i> <span>Imagens</span></a></li>
+            <li><a href="#" id="loginBtn"><i class="fas fa-sign-in-alt"></i> <span>Login</span></a></li>
+            <li class="menu-item-hidden" id="myProfileMenu"><a href="#"><i class="fas fa-user"></i> <span>Meu</span></a></li>
         </ul>
     </div>
+
+    <!-- Overlay -->
+    <div class="popup-overlay" id="popupOverlay"></div>
     
     <div class="container">
         <header>
@@ -119,7 +128,38 @@
     <div class="modal" id="imageViewModal">
         <div class="modal-content image-view-content">
             <span class="close-btn" id="closeViewModalBtn">&times;</span>
-            <img id="fullImage" src="" alt="Imagem em tamanho completo">
+            
+            <!-- Controles da imagem -->
+            <div class="image-controls">
+                <button class="control-btn" id="zoomBtn" title="Zoom">
+                    <i class="fas fa-search-plus"></i>
+                </button>
+                <button class="control-btn" id="fullscreenBtn" title="Tela cheia">
+                    <i class="fas fa-expand"></i>
+                </button>
+            </div>
+            
+            <!-- Indicador de zoom -->
+            <div class="zoom-indicator" id="zoomIndicator" style="display: none;">100%</div>
+            
+            <!-- Container da imagem -->
+            <div class="image-container" id="imageContainer">
+                <img id="fullImage" src="" alt="Imagem em tamanho completo">
+                
+                <!-- Navegação entre imagens -->
+                <button class="image-navigation nav-prev" id="prevImageBtn" title="Imagem anterior">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <button class="image-navigation nav-next" id="nextImageBtn" title="Próxima imagem">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+            
+            <!-- Informações da imagem -->
+            <div class="image-info" id="imageInfo">
+                <span id="imageCounter">1 de 1</span>
+            </div>
+            
             <div class="image-actions">
                 <button class="btn btn-danger" id="deleteImageBtn">Excluir Imagem</button>
             </div>
