@@ -28,10 +28,89 @@
         
         <!-- Aba de Tarefas -->
         <div class="tab-content active" id="tasksTab">
+            <button class="add-btn top-left" id="addTaskBtn">Adicionar Nova Tarefa</button>
+            
+            <!-- Controles de Filtro e Busca -->
+            <div class="tasks-controls">
+                <div class="search-container">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="taskSearchInput" placeholder="Buscar tarefas..." class="search-input">
+                    <button id="clearTaskSearch" class="clear-search" style="display: none;">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                
+                <div class="filter-controls">
+                    <select id="priorityFilter" class="filter-select">
+                        <option value="">Todas as Prioridades</option>
+                        <option value="Alta">Alta</option>
+                        <option value="Média">Média</option>
+                        <option value="Baixa">Baixa</option>
+                    </select>
+                    
+                    <select id="statusFilter" class="filter-select">
+                        <option value="">Todos os Status</option>
+                        <option value="Pendente">Pendente</option>
+                        <option value="Em Andamento">Em Andamento</option>
+                        <option value="Concluído">Concluído</option>
+                    </select>
+                    
+                    <select id="categoryFilter" class="filter-select">
+                        <option value="">Todas as Categorias</option>
+                        <option value="Manutenção">Manutenção</option>
+                        <option value="Instalação">Instalação</option>
+                        <option value="Suporte">Suporte</option>
+                        <option value="Atualização">Atualização</option>
+                        <option value="Backup">Backup</option>
+                        <option value="Segurança">Segurança</option>
+                        <option value="Outros">Outros</option>
+                    </select>
+                    
+                    <select id="taskSortSelect" class="sort-select">
+                        <option value="newest">Mais recentes</option>
+                        <option value="oldest">Mais antigas</option>
+                        <option value="priority">Por prioridade</option>
+                        <option value="deadline">Por prazo</option>
+                        <option value="status">Por status</option>
+                    </select>
+                </div>
+                
+                <div class="calendar-integration">
+                    <button id="calendar-auth-button" class="btn btn-primary calendar-btn">
+                        <span class="calendar-icon">📅</span>
+                        Conectar Google Calendar
+                    </button>
+                    <div id="calendar-status" class="calendar-status"></div>
+                </div>
+            </div>
+            
+            <!-- Estatísticas das Tarefas -->
+            <div class="tasks-stats" id="tasksStats">
+                <div class="stat-item">
+                    <span class="stat-number" id="totalTasks">0</span>
+                    <span class="stat-label">Total</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number" id="pendingTasks">0</span>
+                    <span class="stat-label">Pendentes</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number" id="inProgressTasks">0</span>
+                    <span class="stat-label">Em Andamento</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number" id="completedTasks">0</span>
+                    <span class="stat-label">Concluídas</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number" id="overdueTasks">0</span>
+                    <span class="stat-label">Atrasadas</span>
+                </div>
+            </div>
+            
             <div class="tasks-container" id="tasksContainer">
                 <!-- Tarefas serão carregadas dinamicamente -->
             </div>
-            <button class="add-btn" id="addTaskBtn">Adicionar Nova Tarefa</button>
         </div>
         
         <!-- Aba de Imagens -->
@@ -51,8 +130,61 @@
                 </div>
                 
                 <div class="images-gallery" id="imagesGallery">
-                    <h3>Galeria de Imagens</h3>
+                    <div class="gallery-header">
+                        <h3>Galeria de Imagens</h3>
+                        <div class="gallery-stats" id="galleryStats">
+                            <span id="imageCount">0 imagens</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Controles da Galeria -->
+                    <div class="gallery-controls">
+                        <div class="search-container">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="searchInput" placeholder="Buscar imagens..." class="search-input">
+                            <button id="clearSearch" class="clear-search" style="display: none;">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        
+                        <div class="filter-controls">
+                            <select id="sortSelect" class="sort-select">
+                                <option value="newest">Mais recentes</option>
+                                <option value="oldest">Mais antigas</option>
+                                <option value="name-asc">Nome (A-Z)</option>
+                                <option value="name-desc">Nome (Z-A)</option>
+                            </select>
+                            
+                            <div class="view-controls">
+                                <button id="gridViewBtn" class="view-btn active" title="Visualização em grade">
+                                    <i class="fas fa-th"></i>
+                                </button>
+                                <button id="listViewBtn" class="view-btn" title="Visualização em lista">
+                                    <i class="fas fa-list"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Loading Spinner -->
+                    <div class="gallery-loading" id="galleryLoading" style="display: none;">
+                        <div class="loading-spinner"></div>
+                        <p>Carregando imagens...</p>
+                    </div>
+                    
+                    <!-- Container da Galeria -->
                     <div class="gallery-container" id="galleryContainer"></div>
+                    
+                    <!-- Paginação -->
+                    <div class="gallery-pagination" id="galleryPagination" style="display: none;">
+                        <button id="prevPageBtn" class="pagination-btn" disabled>
+                            <i class="fas fa-chevron-left"></i> Anterior
+                        </button>
+                        <span id="pageInfo" class="page-info">Página 1 de 1</span>
+                        <button id="nextPageBtn" class="pagination-btn" disabled>
+                            Próxima <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -92,12 +224,37 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="editUnits">Unidades:</label>
+                    <label for="editUnits">Unidade:</label>
                     <input type="text" id="editUnits" required>
                 </div>
                 <div class="form-group">
                     <label for="editDeadline">Prazo (dias):</label>
                     <input type="number" id="editDeadline" required>
+                </div>
+                <div class="form-group">
+                    <label for="editDueDate">Data de Vencimento:</label>
+                    <input type="date" id="editDueDate">
+                </div>
+                <div class="form-group">
+                    <label for="editCategory">Categoria:</label>
+                    <select id="editCategory">
+                        <option value="Manutenção">Manutenção</option>
+                        <option value="Instalação">Instalação</option>
+                        <option value="Suporte">Suporte</option>
+                        <option value="Atualização">Atualização</option>
+                        <option value="Backup">Backup</option>
+                        <option value="Segurança">Segurança</option>
+                        <option value="Outros">Outros</option>
+                    </select>
+                </div>
+                
+                <div class="form-group calendar-notification">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="create-calendar-event">
+                        <span class="checkmark"></span>
+                        📅 Criar notificação no Google Calendar
+                    </label>
+                    <small class="help-text">Cria um lembrete no seu Google Calendar 1 hora antes do prazo</small>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" id="cancelBtn">Cancelar</button>
@@ -181,6 +338,10 @@
     
     <!-- Parse SDK -->
     <script src="https://npmcdn.com/parse@5.3.0/dist/parse.min.js"></script>
+    <!-- Google Identity Services (GIS) - Nova API -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="https://apis.google.com/js/api.js" async defer></script>
+    <script src="js/google-calendar.js"></script>
     <script src="js/script.js"></script>
 </body>
 </html>

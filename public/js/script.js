@@ -27,10 +27,39 @@ document.addEventListener('DOMContentLoaded', () => {
     const tasksTab = document.getElementById('tasksTab');
     const imagesTab = document.getElementById('imagesTab');
     
+    // Elementos dos controles de tarefas
+    const taskSearchInput = document.getElementById('taskSearchInput');
+    const clearTaskSearch = document.getElementById('clearTaskSearch');
+    const priorityFilter = document.getElementById('priorityFilter');
+    const statusFilter = document.getElementById('statusFilter');
+    const categoryFilter = document.getElementById('categoryFilter');
+    const taskSortSelect = document.getElementById('taskSortSelect');
+    
+    // Elementos das estatísticas
+    const totalTasks = document.getElementById('totalTasks');
+    const pendingTasks = document.getElementById('pendingTasks');
+    const inProgressTasks = document.getElementById('inProgressTasks');
+    const completedTasks = document.getElementById('completedTasks');
+    const overdueTasks = document.getElementById('overdueTasks');
+    
     // Elementos do upload de imagens
     const uploadArea = document.getElementById('uploadArea');
     const imageInput = document.getElementById('imageInput');
     const uploadImagesBtn = document.getElementById('uploadImagesBtn');
+    
+    // Elementos da galeria dinâmica
+    const galleryContainer = document.getElementById('galleryContainer');
+    const searchInput = document.getElementById('searchInput');
+    const clearSearch = document.getElementById('clearSearch');
+    const sortSelect = document.getElementById('sortSelect');
+    const gridViewBtn = document.getElementById('gridViewBtn');
+    const listViewBtn = document.getElementById('listViewBtn');
+    const galleryLoading = document.getElementById('galleryLoading');
+    const galleryPagination = document.getElementById('galleryPagination');
+    const prevPageBtn = document.getElementById('prevPageBtn');
+    const nextPageBtn = document.getElementById('nextPageBtn');
+    const pageInfo = document.getElementById('pageInfo');
+    const imageCount = document.getElementById('imageCount');
     
     // Elementos do modal de visualização de imagem
     const imageViewModal = document.getElementById('imageViewModal');
@@ -49,11 +78,30 @@ document.addEventListener('DOMContentLoaded', () => {
     let selectedFiles = [];
     let currentImageId = null;
     let allImages = [];
+    let filteredImages = [];
     let currentImageIndex = 0;
     let isZoomed = false;
     let zoomLevel = 1;
     let isDragging = false;
+    let googleCalendarIntegration = null;
     let startX, startY, scrollLeft, scrollTop;
+    
+    // Configurações da galeria
+    let currentView = 'grid'; // 'grid' ou 'list'
+    let currentSort = 'newest';
+    let currentSearch = '';
+    let currentPage = 1;
+    let itemsPerPage = 12;
+    let totalPages = 1;
+    
+    // Configurações das tarefas
+    let allTasks = [];
+    let filteredTasks = [];
+    let currentTaskSearch = '';
+    let currentPriorityFilter = '';
+    let currentStatusFilter = '';
+    let currentCategoryFilter = '';
+    let currentTaskSort = 'newest';
     
 
     
@@ -72,6 +120,28 @@ document.addEventListener('DOMContentLoaded', () => {
     saveBtn.addEventListener('click', saveTask);
     deleteBtn.addEventListener('click', deleteTask);
     
+    // Event listeners para controles de tarefas
+    taskSearchInput.addEventListener('input', handleTaskSearch);
+    clearTaskSearch.addEventListener('click', clearTaskSearchInput);
+    priorityFilter.addEventListener('change', handleTaskFilters);
+    statusFilter.addEventListener('change', handleTaskFilters);
+    categoryFilter.addEventListener('change', handleTaskFilters);
+    taskSortSelect.addEventListener('change', handleTaskSort);
+    
+    // Event listeners para Google Calendar
+    const calendarAuthButton = document.getElementById('calendar-auth-button');
+    if (calendarAuthButton) {
+        calendarAuthButton.addEventListener('click', handleCalendarAuth);
+    }
+    
+    // Escuta mudanças no status de autenticação do Google Calendar
+    window.addEventListener('googleCalendarAuthChanged', handleCalendarAuthChanged);
+    
+    // Inicializa Google Calendar quando a página carrega (com delay para aguardar API)
+    setTimeout(() => {
+        initializeGoogleCalendar();
+    }, 1000);
+    
 
 
     // Event listeners para as abas
@@ -79,6 +149,15 @@ document.addEventListener('DOMContentLoaded', () => {
     imagesTabBtn.addEventListener('click', () => switchTab('images'));
     imageInput.addEventListener('change', handleFileSelect);
     uploadImagesBtn.addEventListener('click', uploadImages);
+    
+    // Event listeners para controles da galeria
+    searchInput.addEventListener('input', handleSearch);
+    clearSearch.addEventListener('click', clearSearchInput);
+    sortSelect.addEventListener('change', handleSort);
+    gridViewBtn.addEventListener('click', () => setView('grid'));
+    listViewBtn.addEventListener('click', () => setView('list'));
+    prevPageBtn.addEventListener('click', () => changePage(currentPage - 1));
+    nextPageBtn.addEventListener('click', () => changePage(currentPage + 1));
     
     closeViewModalBtn.addEventListener('click', closeImageViewModal);
     deleteImageBtn.addEventListener('click', deleteImage);
@@ -137,25 +216,23 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const query = new Parse.Query(Task);
             query.descending('createdAt');
-            
             const tasks = await query.find();
             
-            tasksContainer.innerHTML = '';
+            allTasks = tasks.map(task => ({
+                id: task.id,
+                title: task.get('title'),
+                description: task.get('description'),
+                priority: task.get('priority'),
+                status: task.get('status'),
+                units: task.get('units'),
+                deadline: task.get('deadline'),
+                dueDate: task.get('dueDate'),
+                category: task.get('category') || 'Outros',
+                createdAt: task.get('createdAt')
+            }));
             
-            tasks.forEach((task) => {
-                const taskData = {
-                    id: task.id,
-                    title: task.get('title'),
-                    description: task.get('description'),
-                    priority: task.get('priority'),
-                    status: task.get('status'),
-                    units: task.get('units'),
-                    deadline: task.get('deadline')
-                };
-                
-                const taskCard = createTaskCard(taskData);
-                tasksContainer.appendChild(taskCard);
-            });
+            applyTaskFilters();
+            updateTaskStats();
         } catch (error) {
             console.error('Erro ao carregar tarefas:', error);
             showAlert('error', 'Erro ao carregar tarefas');
@@ -182,9 +259,22 @@ document.addEventListener('DOMContentLoaded', () => {
         // Adicionar classe de status ao card para a linha colorida
         taskCard.classList.add(cardStatusClass);
         
+        // Verificar se a tarefa está atrasada ou próxima do prazo
+        const deadlineClass = getDeadlineClass(task);
+        if (deadlineClass) {
+            taskCard.classList.add(deadlineClass);
+        }
+        
+        // Indicador de prioridade
+        const priorityClass = `priority-${task.priority.toLowerCase()}`;
+        
         taskCard.innerHTML = `
             <div class="task-header">
-                <h3 class="task-title">${task.title}</h3>
+                <h3 class="task-title">
+                    <span class="priority-indicator ${priorityClass}"></span>
+                    ${task.title}
+                    <span class="category-badge">${task.category}</span>
+                </h3>
                 <span class="task-status ${statusClass}">${task.status}</span>
             </div>
             <p class="task-description">${task.description}</p>
@@ -194,29 +284,193 @@ document.addEventListener('DOMContentLoaded', () => {
                     <span class="detail-value">${task.priority}</span>
                 </div>
                 <div class="detail-item">
-                    <span class="detail-label">Unidades:</span>
+                    <span class="detail-label">Unidade:</span>
                     <span class="detail-value">${task.units}</span>
                 </div>
                 <div class="detail-item">
                     <span class="detail-label">Prazo:</span>
                     <span class="detail-value">${task.deadline} dias</span>
                 </div>
+                ${task.dueDate ? `
+                <div class="detail-item">
+                    <span class="detail-label">Vencimento:</span>
+                    <span class="detail-value">${formatDate(task.dueDate)}</span>
+                </div>
+                ` : ''}
             </div>
             <div class="task-actions">
-                <button class="edit-btn">✏️ Editar</button>
-                <button class="delete-btn">🗑️ Excluir</button>
+                <button class="complete-btn">✓ Concluído</button>
             </div>
         `;
         
-        taskCard.querySelector('.edit-btn').addEventListener('click', () => {
-            openEditModal(task.id);
-        });
-        
-        taskCard.querySelector('.delete-btn').addEventListener('click', () => {
-            deleteTaskDirectly(task.id);
+        taskCard.querySelector('.complete-btn').addEventListener('click', () => {
+            completeTask(task.id, taskCard);
         });
         
         return taskCard;
+    }
+    
+    // Funções de filtro e busca de tarefas
+    function handleTaskSearch() {
+        currentTaskSearch = taskSearchInput.value.toLowerCase();
+        clearTaskSearch.style.display = currentTaskSearch ? 'block' : 'none';
+        applyTaskFilters();
+    }
+    
+    function clearTaskSearchInput() {
+        taskSearchInput.value = '';
+        currentTaskSearch = '';
+        clearTaskSearch.style.display = 'none';
+        applyTaskFilters();
+    }
+    
+    function handleTaskFilters() {
+        currentPriorityFilter = priorityFilter.value;
+        currentStatusFilter = statusFilter.value;
+        currentCategoryFilter = categoryFilter.value;
+        applyTaskFilters();
+    }
+    
+    function handleTaskSort() {
+        currentTaskSort = taskSortSelect.value;
+        applyTaskFilters();
+    }
+    
+    function applyTaskFilters() {
+        filteredTasks = allTasks.filter(task => {
+            // Filtro de busca
+            if (currentTaskSearch && 
+                !task.title.toLowerCase().includes(currentTaskSearch) &&
+                !task.description.toLowerCase().includes(currentTaskSearch)) {
+                return false;
+            }
+            
+            // Filtro de prioridade
+            if (currentPriorityFilter && task.priority !== currentPriorityFilter) {
+                return false;
+            }
+            
+            // Filtro de status
+            if (currentStatusFilter && task.status !== currentStatusFilter) {
+                return false;
+            }
+            
+            // Filtro de categoria
+            if (currentCategoryFilter && task.category !== currentCategoryFilter) {
+                return false;
+            }
+            
+            return true;
+        });
+        
+        // Ordenação
+        sortTasks();
+        renderTasks();
+    }
+    
+    function sortTasks() {
+        filteredTasks.sort((a, b) => {
+            switch (currentTaskSort) {
+                case 'newest':
+                    return new Date(b.createdAt) - new Date(a.createdAt);
+                case 'oldest':
+                    return new Date(a.createdAt) - new Date(b.createdAt);
+                case 'priority':
+                    const priorityOrder = { 'Alta': 3, 'Média': 2, 'Baixa': 1 };
+                    return priorityOrder[b.priority] - priorityOrder[a.priority];
+                case 'deadline':
+                    return a.deadline - b.deadline;
+                case 'status':
+                    const statusOrder = { 'Pendente': 1, 'Em Andamento': 2, 'Concluído': 3 };
+                    return statusOrder[a.status] - statusOrder[b.status];
+                default:
+                    return 0;
+            }
+        });
+    }
+    
+    function renderTasks() {
+        tasksContainer.innerHTML = '';
+        
+        if (filteredTasks.length === 0) {
+            const noTasksMessage = document.createElement('div');
+            noTasksMessage.className = 'no-tasks';
+            
+            let title, description;
+            if (currentTaskSearch || currentPriorityFilter || currentStatusFilter || currentCategoryFilter) {
+                title = 'Nenhuma tarefa encontrada';
+                description = 'Não há tarefas que correspondam aos filtros selecionados. Tente ajustar os filtros ou adicionar uma nova tarefa.';
+            } else if (allTasks.length === 0) {
+                title = 'Nenhuma tarefa encontrada';
+                description = 'Clique em "Adicionar Nova Tarefa" para começar.';
+            } else {
+                title = 'Nenhuma tarefa encontrada';
+                description = 'Tente ajustar os filtros aplicados.';
+            }
+            
+            noTasksMessage.innerHTML = `
+                <h3>${title}</h3>
+                <p>${description}</p>
+            `;
+            tasksContainer.appendChild(noTasksMessage);
+            return;
+        }
+        
+        filteredTasks.forEach(task => {
+            const taskElement = createTaskCard(task);
+            tasksContainer.appendChild(taskElement);
+        });
+    }
+    
+    function updateTaskStats() {
+        const total = allTasks.length;
+        const pending = allTasks.filter(task => task.status === 'Pendente').length;
+        const inProgress = allTasks.filter(task => task.status === 'Em Andamento').length;
+        const completed = allTasks.filter(task => task.status === 'Concluído').length;
+        const overdue = allTasks.filter(task => isTaskOverdue(task)).length;
+        
+        totalTasks.textContent = total;
+        pendingTasks.textContent = pending;
+        inProgressTasks.textContent = inProgress;
+        completedTasks.textContent = completed;
+        overdueTasks.textContent = overdue;
+    }
+    
+    function getDeadlineClass(task) {
+        if (task.status === 'Concluído') return null;
+        
+        if (task.dueDate) {
+            const today = new Date();
+            const dueDate = new Date(task.dueDate);
+            const diffTime = dueDate - today;
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            
+            if (diffDays < 0) {
+                return 'deadline-warning'; // Atrasada
+            } else if (diffDays <= 3) {
+                return 'deadline-soon'; // Próxima do prazo
+            }
+        }
+        
+        return null;
+    }
+    
+    function isTaskOverdue(task) {
+        if (task.status === 'Concluído') return false;
+        
+        if (task.dueDate) {
+            const today = new Date();
+            const dueDate = new Date(task.dueDate);
+            return dueDate < today;
+        }
+        
+        return false;
+    }
+    
+    function formatDate(dateString) {
+        if (!dateString) return '';
+        const date = new Date(dateString);
+        return date.toLocaleDateString('pt-BR');
     }
     
     // Abrir modal de edição
@@ -239,6 +493,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.getElementById('editStatus').value = task.get('status');
                 document.getElementById('editUnits').value = task.get('units');
                 document.getElementById('editDeadline').value = task.get('deadline');
+                document.getElementById('editDueDate').value = task.get('dueDate') || '';
+                document.getElementById('editCategory').value = task.get('category') || 'Outros';
             } catch (error) {
                 console.error('Erro ao carregar tarefa:', error);
                 showAlert('error', 'Erro ao carregar tarefa');
@@ -260,44 +516,71 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Salvar tarefa
     async function saveTask() {
+        const dueDateValue = document.getElementById('editDueDate').value;
         const taskData = {
             title: document.getElementById('editTitle').value,
             description: document.getElementById('editDescription').value,
             priority: document.getElementById('editPriority').value,
             status: document.getElementById('editStatus').value,
             units: document.getElementById('editUnits').value,
-            deadline: document.getElementById('editDeadline').value
+            deadline: document.getElementById('editDeadline').value,
+            dueDate: dueDateValue ? new Date(dueDateValue) : null,
+            category: document.getElementById('editCategory').value
         };
+        
+        const createCalendarEvent = document.getElementById('create-calendar-event')?.checked || false;
         
         try {
             let task;
+            let isNewTask = false;
             
             if (currentTaskId) {
                 // Atualizar tarefa existente
                 const query = new Parse.Query(Task);
                 task = await query.get(currentTaskId);
-                
-                task.set('title', taskData.title);
-                task.set('description', taskData.description);
-                task.set('priority', taskData.priority);
-                task.set('status', taskData.status);
-                task.set('units', taskData.units);
-                task.set('deadline', taskData.deadline);
             } else {
                 // Criar nova tarefa
                 task = new Task();
-                
-                task.set('title', taskData.title);
-                task.set('description', taskData.description);
-                task.set('priority', taskData.priority);
-                task.set('status', taskData.status);
-                task.set('units', taskData.units);
-                task.set('deadline', taskData.deadline);
+                isNewTask = true;
             }
+            
+            // Definir todos os campos da tarefa
+            task.set('title', taskData.title);
+            task.set('description', taskData.description);
+            task.set('priority', taskData.priority);
+            task.set('status', taskData.status);
+            task.set('units', taskData.units);
+            task.set('deadline', taskData.deadline);
+            if (taskData.dueDate) {
+                task.set('dueDate', taskData.dueDate);
+            }
+            task.set('category', taskData.category);
             
             await task.save();
             
-            showAlert('success', currentTaskId ? 'Tarefa atualizada com sucesso!' : 'Tarefa criada com sucesso!');
+            // Criar evento no Google Calendar se solicitado
+            if (createCalendarEvent && isNewTask && taskData.dueDate) {
+                const calendarTaskData = {
+                    id: task.id,
+                    title: taskData.title,
+                    description: taskData.description,
+                    priority: taskData.priority,
+                    dueDate: taskData.dueDate,
+                    category: taskData.category
+                };
+                
+                const calendarSuccess = await createCalendarEventForTask(calendarTaskData);
+                if (calendarSuccess) {
+                    showAlert('success', 'Tarefa salva e evento criado no Google Calendar!');
+                } else if (googleCalendarIntegration && googleCalendarIntegration.isSignedIn) {
+                    showAlert('warning', 'Tarefa salva, mas houve erro ao criar evento no Google Calendar.');
+                } else {
+                    showAlert('info', 'Tarefa salva! Para criar eventos no Google Calendar, conecte sua conta primeiro.');
+                }
+            } else {
+                showAlert('success', currentTaskId ? 'Tarefa atualizada com sucesso!' : 'Tarefa criada com sucesso!');
+            }
+            
             closeModal();
             loadTasks();
         } catch (error) {
@@ -343,6 +626,22 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error('Erro ao excluir tarefa:', error);
             showAlert('error', 'Erro ao excluir tarefa');
         }
+    }
+    
+    function completeTask(taskId, taskCard) {
+        // Adicionar animação de fade out
+        taskCard.style.transition = 'opacity 0.5s ease-out, transform 0.5s ease-out';
+        taskCard.style.opacity = '0';
+        taskCard.style.transform = 'translateX(100%)';
+        
+        // Remover o elemento após a animação
+        setTimeout(() => {
+            taskCard.remove();
+            // Atualizar estatísticas
+            updateTaskStats();
+        }, 500);
+        
+        showAlert('success', 'Tarefa concluída!');
     }
     
     // Funções para gerenciamento de abas
@@ -465,17 +764,12 @@ document.addEventListener('DOMContentLoaded', () => {
     
     async function loadImages() {
         try {
+            showGalleryLoading(true);
+            
             const query = new Parse.Query(ImageFile);
             query.descending('createdAt');
             
             const images = await query.find();
-            
-            galleryContainer.innerHTML = '';
-            
-            if (images.length === 0) {
-                galleryContainer.innerHTML = '<p style="grid-column: 1 / -1; text-align: center; color: #666; padding: 2rem;">Nenhuma imagem encontrada. Faça upload de suas primeiras imagens!</p>';
-                return;
-            }
             
             // Limpar e popular o array de todas as imagens
             allImages = [];
@@ -484,37 +778,269 @@ document.addEventListener('DOMContentLoaded', () => {
                 const imageData = {
                     id: image.id,
                     url: image.get('file').url(),
-                    name: image.get('name')
+                    name: image.get('name'),
+                    createdAt: image.get('createdAt'),
+                    size: image.get('file')._source?.size || 0
                 };
                 
-                // Adicionar ao array de todas as imagens
                 allImages.push(imageData);
-                
-                const galleryItem = createGalleryItem(imageData);
-                galleryContainer.appendChild(galleryItem);
             });
+            
+            // Aplicar filtros e renderizar
+            applyFiltersAndRender();
+            
         } catch (error) {
             console.error('Erro ao carregar imagens:', error);
             showAlert('error', 'Erro ao carregar imagens: ' + error.message);
+        } finally {
+            showGalleryLoading(false);
         }
+    }
+    
+    function showGalleryLoading(show) {
+        galleryLoading.style.display = show ? 'flex' : 'none';
+    }
+    
+    function applyFiltersAndRender() {
+        // Aplicar busca
+        filteredImages = allImages.filter(image => {
+            if (!currentSearch) return true;
+            return image.name.toLowerCase().includes(currentSearch.toLowerCase());
+        });
+        
+        // Aplicar ordenação
+        filteredImages.sort((a, b) => {
+            switch (currentSort) {
+                case 'newest':
+                    return new Date(b.createdAt) - new Date(a.createdAt);
+                case 'oldest':
+                    return new Date(a.createdAt) - new Date(b.createdAt);
+                case 'name-asc':
+                    return a.name.localeCompare(b.name);
+                case 'name-desc':
+                    return b.name.localeCompare(a.name);
+                default:
+                    return 0;
+            }
+        });
+        
+        // Calcular paginação
+        totalPages = Math.ceil(filteredImages.length / itemsPerPage);
+        if (currentPage > totalPages) currentPage = 1;
+        
+        // Renderizar galeria
+        renderGallery();
+        updateGalleryStats();
+        updatePagination();
+    }
+    
+    function renderGallery() {
+        galleryContainer.innerHTML = '';
+        
+        if (filteredImages.length === 0) {
+            if (currentSearch.trim() !== '') {
+                // Estado de busca sem resultados
+                galleryContainer.innerHTML = `
+                    <div class="gallery-empty">
+                        <div class="empty-icon">🔍</div>
+                        <h3 class="empty-title">Nenhuma imagem encontrada</h3>
+                        <p class="empty-description">Tente ajustar sua busca ou filtros</p>
+                    </div>
+                `;
+            } else if (allImages.length === 0) {
+                // Estado completamente vazio
+                galleryContainer.innerHTML = `
+                    <div class="gallery-empty">
+                        <div class="empty-icon">📷</div>
+                        <h3 class="empty-title">Sua galeria está vazia</h3>
+                        <p class="empty-description">Comece fazendo upload de suas primeiras imagens</p>
+                    </div>
+                `;
+            } else {
+                // Estado de filtro sem resultados
+                galleryContainer.innerHTML = `
+                    <div class="gallery-empty">
+                        <div class="empty-icon">🎯</div>
+                        <h3 class="empty-title">Nenhuma imagem corresponde aos filtros</h3>
+                        <p class="empty-description">Tente alterar os critérios de ordenação</p>
+                    </div>
+                `;
+            }
+            return;
+        }
+        
+        // Aplicar classe de visualização
+        galleryContainer.className = `gallery-container ${currentView === 'list' ? 'list-view' : ''}`;
+        
+        // Calcular itens da página atual
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const endIndex = startIndex + itemsPerPage;
+        const pageImages = filteredImages.slice(startIndex, endIndex);
+        
+        // Renderizar itens com delay para animação
+        pageImages.forEach((image, index) => {
+            setTimeout(() => {
+                const galleryItem = createGalleryItem(image);
+                // Adiciona delay de animação baseado no índice
+                galleryItem.style.animationDelay = `${index * 0.05}s`;
+                galleryContainer.appendChild(galleryItem);
+            }, index * 50);
+        });
+    }
+    
+    function updateGalleryStats() {
+        const total = allImages.length;
+        const filtered = filteredImages.length;
+        
+        if (currentSearch && filtered !== total) {
+            imageCount.textContent = `${filtered} de ${total} imagens`;
+        } else {
+            imageCount.textContent = `${total} ${total === 1 ? 'imagem' : 'imagens'}`;
+        }
+    }
+    
+    function updatePagination() {
+        if (totalPages <= 1) {
+            galleryPagination.style.display = 'none';
+            return;
+        }
+        
+        galleryPagination.style.display = 'flex';
+        prevPageBtn.disabled = currentPage <= 1;
+        nextPageBtn.disabled = currentPage >= totalPages;
+        pageInfo.textContent = `Página ${currentPage} de ${totalPages}`;
+    }
+    
+    function handleSearch(e) {
+        currentSearch = e.target.value.trim();
+        currentPage = 1;
+        
+        if (currentSearch) {
+            clearSearch.style.display = 'block';
+        } else {
+            clearSearch.style.display = 'none';
+        }
+        
+        // Debounce da busca
+        clearTimeout(window.searchTimeout);
+        window.searchTimeout = setTimeout(() => {
+            applyFiltersAndRender();
+        }, 300);
+    }
+    
+    function clearSearchInput() {
+        searchInput.value = '';
+        currentSearch = '';
+        clearSearch.style.display = 'none';
+        currentPage = 1;
+        applyFiltersAndRender();
+    }
+    
+    function handleSort(e) {
+        currentSort = e.target.value;
+        currentPage = 1;
+        applyFiltersAndRender();
+    }
+    
+    function setView(view) {
+        currentView = view;
+        
+        // Atualizar botões
+        gridViewBtn.classList.toggle('active', view === 'grid');
+        listViewBtn.classList.toggle('active', view === 'list');
+        
+        // Ajustar itens por página baseado na visualização
+        itemsPerPage = view === 'list' ? 8 : 12;
+        currentPage = 1;
+        
+        applyFiltersAndRender();
+    }
+    
+    function changePage(page) {
+        if (page < 1 || page > totalPages) return;
+        currentPage = page;
+        renderGallery();
+        updatePagination();
+        
+        // Scroll suave para o topo da galeria
+        document.getElementById('imagesGallery').scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'start' 
+        });
     }
     
     function createGalleryItem(image) {
         const galleryItem = document.createElement('div');
-        galleryItem.className = 'gallery-item';
+        galleryItem.className = `gallery-item ${currentView === 'list' ? 'list-view' : ''}`;
         galleryItem.dataset.id = image.id;
         
         const img = document.createElement('img');
         img.src = image.url;
         img.alt = image.name;
+        img.loading = 'lazy'; // Lazy loading para melhor performance
         
-        galleryItem.appendChild(img);
+        if (currentView === 'list') {
+            // Visualização em lista
+            const imageInfo = document.createElement('div');
+            imageInfo.className = 'image-info';
+            
+            const imageName = document.createElement('div');
+            imageName.className = 'image-name';
+            imageName.textContent = image.name;
+            
+            const imageDate = document.createElement('div');
+            imageDate.className = 'image-date';
+            imageDate.textContent = formatDate(image.createdAt);
+            
+            imageInfo.appendChild(imageName);
+            imageInfo.appendChild(imageDate);
+            
+            galleryItem.appendChild(img);
+            galleryItem.appendChild(imageInfo);
+        } else {
+            // Visualização em grade com overlay
+            const overlay = document.createElement('div');
+            overlay.className = 'image-overlay';
+            
+            const imageName = document.createElement('div');
+            imageName.className = 'image-name';
+            imageName.textContent = image.name;
+            
+            const imageDate = document.createElement('div');
+            imageDate.className = 'image-date';
+            imageDate.textContent = formatDate(image.createdAt);
+            
+            overlay.appendChild(imageName);
+            overlay.appendChild(imageDate);
+            
+            galleryItem.appendChild(img);
+            galleryItem.appendChild(overlay);
+        }
         
         galleryItem.addEventListener('click', () => {
             openImageViewModal(image);
         });
         
         return galleryItem;
+    }
+    
+    function formatDate(date) {
+        if (!date) return 'Data desconhecida';
+        
+        const now = new Date();
+        const imageDate = new Date(date);
+        const diffTime = Math.abs(now - imageDate);
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        
+        if (diffDays === 1) {
+            return 'Hoje';
+        } else if (diffDays === 2) {
+            return 'Ontem';
+        } else if (diffDays <= 7) {
+            return `${diffDays - 1} dias atrás`;
+        } else {
+            return imageDate.toLocaleDateString('pt-BR');
+        }
     }
     
     function openImageViewModal(image) {
@@ -779,6 +1305,176 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 3000);
     }
     
+    // Funções do Google Calendar
+    async function initializeGoogleCalendar() {
+        try {
+            // Aguarda o carregamento da API do Google
+            if (typeof gapi === 'undefined') {
+                updateCalendarStatus('API não carregada');
+                return;
+            }
+            
+            if (typeof GoogleCalendarIntegration !== 'undefined') {
+                googleCalendarIntegration = new GoogleCalendarIntegration();
+                
+                // Verifica se as credenciais estão configuradas
+                if (!googleCalendarIntegration.areCredentialsConfigured()) {
+                    updateCalendarStatus('Credenciais não configuradas');
+                    return;
+                }
+                
+                const success = await googleCalendarIntegration.initialize();
+                if (success) {
+                    console.log('Google Calendar integração inicializada com sucesso');
+                } else {
+                    console.log('Falha ao inicializar Google Calendar');
+                }
+                updateCalendarStatus();
+            } else {
+                updateCalendarStatus('Classe não carregada');
+            }
+        } catch (error) {
+            console.error('Erro ao inicializar Google Calendar:', error);
+            updateCalendarStatus('Erro na inicialização');
+        }
+    }
+    
+    function updateCalendarStatus(customMessage = null) {
+        const statusElement = document.getElementById('calendar-status');
+        const buttonElement = document.getElementById('calendar-auth-button');
+        
+        if (!statusElement || !buttonElement) return;
+        
+        if (customMessage) {
+            statusElement.textContent = customMessage;
+            statusElement.className = 'calendar-status error';
+            buttonElement.textContent = '🔄 Tentar Novamente';
+            buttonElement.style.backgroundColor = '#e74c3c';
+            buttonElement.style.color = 'white';
+            return;
+        }
+        
+        if (googleCalendarIntegration && googleCalendarIntegration.isSignedIn) {
+            statusElement.textContent = 'Conectado ✓';
+            statusElement.className = 'calendar-status connected';
+            buttonElement.textContent = '🚪 Desconectar';
+            buttonElement.style.backgroundColor = '#e74c3c';
+            buttonElement.style.color = 'white';
+        } else {
+            statusElement.textContent = 'Não conectado';
+            statusElement.className = 'calendar-status';
+            buttonElement.textContent = '📅 Conectar Google Calendar';
+            buttonElement.style.backgroundColor = '#4285f4';
+            buttonElement.style.color = 'white';
+        }
+    }
+    
+    async function handleCalendarAuth() {
+        if (!googleCalendarIntegration) {
+            alert('Google Calendar não está disponível. Verifique sua conexão com a internet.');
+            return;
+        }
+        
+        try {
+            if (googleCalendarIntegration.isSignedIn) {
+                await googleCalendarIntegration.signOut();
+            } else {
+                await googleCalendarIntegration.signIn();
+            }
+            updateCalendarStatus();
+        } catch (error) {
+            console.error('Erro na autenticação:', error);
+            alert('Erro ao conectar com Google Calendar. Tente novamente.');
+        }
+    }
+    
+    function handleCalendarAuthChanged(event) {
+        updateCalendarStatus();
+    }
+    
+    async function createCalendarEventForTask(task) {
+        if (!googleCalendarIntegration || !googleCalendarIntegration.isSignedIn) {
+            return false;
+        }
+        
+        try {
+            const success = await googleCalendarIntegration.createTaskEvent(task);
+            if (success) {
+                console.log('Evento criado no Google Calendar com sucesso');
+                return true;
+            }
+        } catch (error) {
+            console.error('Erro ao criar evento no Google Calendar:', error);
+        }
+        return false;
+    }
+    
+    // Função para mostrar notificações elegantes
+    function showNotification(message, type = 'info') {
+        // Remove notificações existentes
+        const existingNotifications = document.querySelectorAll('.notification');
+        existingNotifications.forEach(notification => notification.remove());
+        
+        // Cria nova notificação
+        const notification = document.createElement('div');
+        notification.className = `notification notification-${type}`;
+        notification.innerHTML = `
+            <div class="notification-content">
+                <span class="notification-icon">${getNotificationIcon(type)}</span>
+                <span class="notification-message">${message}</span>
+                <button class="notification-close" onclick="this.parentElement.parentElement.remove()">&times;</button>
+            </div>
+        `;
+        
+        // Adiciona estilos inline para garantir que funcione
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10000;
+            min-width: 300px;
+            max-width: 500px;
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            animation: slideInRight 0.3s ease-out;
+            font-family: inherit;
+        `;
+        
+        // Define cores baseadas no tipo
+        const colors = {
+            success: { bg: '#d4edda', border: '#c3e6cb', text: '#155724' },
+            warning: { bg: '#fff3cd', border: '#ffeaa7', text: '#856404' },
+            error: { bg: '#f8d7da', border: '#f5c6cb', text: '#721c24' },
+            info: { bg: '#d1ecf1', border: '#bee5eb', text: '#0c5460' }
+        };
+        
+        const color = colors[type] || colors.info;
+        notification.style.backgroundColor = color.bg;
+        notification.style.border = `1px solid ${color.border}`;
+        notification.style.color = color.text;
+        
+        document.body.appendChild(notification);
+        
+        // Remove automaticamente após 5 segundos
+        setTimeout(() => {
+            if (notification.parentElement) {
+                notification.style.animation = 'slideOutRight 0.3s ease-in';
+                setTimeout(() => notification.remove(), 300);
+            }
+        }, 5000);
+    }
+    
+    function getNotificationIcon(type) {
+        const icons = {
+            success: '✅',
+            warning: '⚠️',
+            error: '❌',
+            info: 'ℹ️'
+        };
+        return icons[type] || icons.info;
+    }
+
     // Inicializar com a aba de tarefas ativa
     switchTab('tasks');
     
