@@ -48,12 +48,7 @@
                         <option value="Baixa">Baixa</option>
                     </select>
                     
-                    <select id="statusFilter" class="filter-select">
-                        <option value="">Todos os Status</option>
-                        <option value="Pendente">Pendente</option>
-                        <option value="Em Andamento">Em Andamento</option>
-                        <option value="Concluído">Concluído</option>
-                    </select>
+
                     
                     <select id="categoryFilter" class="filter-select">
                         <option value="">Todas as Categorias</option>
@@ -70,8 +65,7 @@
                         <option value="newest">Mais recentes</option>
                         <option value="oldest">Mais antigas</option>
                         <option value="priority">Por prioridade</option>
-                        <option value="deadline">Por prazo</option>
-                        <option value="status">Por status</option>
+
                     </select>
                 </div>
                 
@@ -84,29 +78,7 @@
                 </div>
             </div>
             
-            <!-- Estatísticas das Tarefas -->
-            <div class="tasks-stats" id="tasksStats">
-                <div class="stat-item">
-                    <span class="stat-number" id="totalTasks">0</span>
-                    <span class="stat-label">Total</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-number" id="pendingTasks">0</span>
-                    <span class="stat-label">Pendentes</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-number" id="inProgressTasks">0</span>
-                    <span class="stat-label">Em Andamento</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-number" id="completedTasks">0</span>
-                    <span class="stat-label">Concluídas</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-number" id="overdueTasks">0</span>
-                    <span class="stat-label">Atrasadas</span>
-                </div>
-            </div>
+            <!-- Estatísticas removidas conforme solicitado -->
             
             <div class="tasks-container" id="tasksContainer">
                 <!-- Tarefas serão carregadas dinamicamente -->
@@ -215,22 +187,22 @@
                         <option value="Baixa">Baixa</option>
                     </select>
                 </div>
-                <div class="form-group">
-                    <label for="editStatus">Status:</label>
-                    <select id="editStatus" required>
-                        <option value="Pendente">Pendente</option>
-                        <option value="Em Andamento">Em Andamento</option>
-                        <option value="Concluído">Concluído</option>
-                    </select>
-                </div>
+
                 <div class="form-group">
                     <label for="editUnits">Unidade:</label>
-                    <input type="text" id="editUnits" required>
+                    <select id="editUnits" required>
+                        <option value="">Selecione uma unidade</option>
+                        <option value="Alcindo Cacela">Alcindo Cacela</option>
+                        <option value="Almirante Barroso">Almirante Barroso</option>
+                        <option value="Augusto Montenegro">Augusto Montenegro</option>
+                        <option value="Batista Campos">Batista Campos</option>
+                        <option value="Conselheiro Furtado">Conselheiro Furtado</option>
+                        <option value="Umarizal">Umarizal</option>
+                        <option value="Três Corações">Três Corações</option>
+                        <option value="Castanhal">Castanhal</option>
+                    </select>
                 </div>
-                <div class="form-group">
-                    <label for="editDeadline">Prazo (dias):</label>
-                    <input type="number" id="editDeadline" required>
-                </div>
+
                 <div class="form-group">
                     <label for="editDueDate">Data de Vencimento:</label>
                     <input type="date" id="editDueDate">
@@ -341,6 +313,8 @@
     <!-- Google Identity Services (GIS) - Nova API -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script src="https://apis.google.com/js/api.js" async defer></script>
+    <!-- Google Calendar Integration -->
+    <script src="js/google-calendar-config.js"></script>
     <script src="js/google-calendar.js"></script>
     <script src="js/script.js"></script>
 </body>

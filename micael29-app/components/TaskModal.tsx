@@ -142,13 +142,23 @@ export default function TaskModal({ visible, task, onSave, onCancel }: TaskModal
 
           <View style={styles.formGroup}>
             <Text style={styles.label}>Unidades *</Text>
-            <TextInput
-              style={styles.input}
-              value={formData.units}
-              onChangeText={(text) => updateField('units', text)}
-              placeholder="Ex: Laboratório A, Sala 101"
-              placeholderTextColor="#95a5a6"
-            />
+            <View style={styles.pickerContainer}>
+              <Picker
+                 selectedValue={formData.units}
+                 onValueChange={(value) => updateField('units', value)}
+                 style={styles.picker}
+               >
+                 <Picker.Item label="Selecione uma unidade" value="" />
+                 <Picker.Item label="Alcindo Cacela" value="Alcindo Cacela" />
+                 <Picker.Item label="Almirante Barroso" value="Almirante Barroso" />
+                 <Picker.Item label="Augusto Montenegro" value="Augusto Montenegro" />
+                 <Picker.Item label="Batista Campos" value="Batista Campos" />
+                 <Picker.Item label="Conselheiro Furtado" value="Conselheiro Furtado" />
+                 <Picker.Item label="Umarizal" value="Umarizal" />
+                 <Picker.Item label="Três Corações" value="Três Corações" />
+                 <Picker.Item label="Castanhal" value="Castanhal" />
+               </Picker>
+            </View>
           </View>
 
           <View style={styles.formGroup}>

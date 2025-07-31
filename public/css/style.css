@@ -183,17 +183,10 @@ h1 {
     letter-spacing: 0.5px;
 }
 
-/* Indicadores de Prioridade */
-.priority-indicator {
-    display: inline-block;
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    margin-right: 0.5rem;
-}
+/* Indicadores de Prioridade removidos */
 
 .priority-alta {
-    background-color: var(--danger);
+    /* Cor de fundo removida */
 }
 
 .priority-média {
@@ -201,7 +194,7 @@ h1 {
 }
 
 .priority-baixa {
-    background-color: var(--success);
+    /* Cor de fundo removida */
 }
 
 /* Indicadores de Status Melhorados */
@@ -214,30 +207,17 @@ h1 {
     letter-spacing: 0.5px;
 }
 
-.status-pending {
-    background-color: rgba(241, 196, 15, 0.2);
-    color: #f1c40f;
-}
-
-.status-in-progress {
-    background-color: rgba(52, 152, 219, 0.2);
-    color: #3498db;
-}
-
-.status-completed {
-    background-color: rgba(46, 204, 113, 0.2);
-    color: #2ecc71;
-}
+/* Classes de status removidas - agora usando apenas prioridade */
 
 /* Alertas de Prazo */
 .deadline-warning {
     background-color: rgba(231, 76, 60, 0.1);
-    border-left: 4px solid var(--danger);
+    /* border-left removido para não conflitar com faixas de prioridade */
 }
 
 .deadline-soon {
     background-color: rgba(243, 156, 18, 0.1);
-    border-left: 4px solid var(--warning);
+    /* border-left removido para não conflitar com faixas de prioridade */
 }
 
 /* Categorias */
@@ -327,16 +307,16 @@ h1 {
     transition: all 0.3s ease;
 }
 
-.task-card.status-pending::before {
-    background: var(--warning);
+.task-card.priority-alta::before {
+    background: #e74c3c; /* Vermelho */
 }
 
-.task-card.status-in-progress::before {
-    background: var(--accent);
+.task-card.priority-media::before {
+    background: #f39c12; /* Laranja */
 }
 
-.task-card.status-completed::before {
-    background: var(--success);
+.task-card.priority-baixa::before {
+    background: #3498db; /* Azul */
 }
 
 .task-card:hover {
@@ -346,7 +326,7 @@ h1 {
 
 /* Indicadores de prazo mais visíveis */
 .deadline-warning {
-    animation: pulse 2s infinite;
+    /* Animação piscante removida */
 }
 
 @keyframes pulse {
@@ -1415,16 +1395,16 @@ h1 {
     z-index: 10;
 }
 
-.task-card.status-pending::before {
-    background-color: var(--warning);
+.task-card.priority-alta::before {
+    background-color: #e74c3c; /* Vermelho */
 }
 
-.task-card.status-in-progress::before {
-    background-color: var(--accent);
+.task-card.priority-media::before {
+    background-color: #f39c12; /* Laranja */
 }
 
-.task-card.status-completed::before {
-    background-color: var(--success);
+.task-card.priority-baixa::before {
+    background-color: #3498db; /* Azul */
 }
 
 .task-card:hover {
@@ -1457,20 +1437,7 @@ h1 {
     letter-spacing: 0.5px;
 }
 
-.status-pending {
-    background-color: #fff3cd;
-    color: #856404;
-}
-
-.status-in-progress {
-    background-color: #e7f5fe;
-    color: #0056b3;
-}
-
-.status-completed {
-    background-color: #d4edda;
-    color: #155724;
-}
+/* Classes de status duplicadas removidas - usando apenas prioridade */
 
 .task-description {
     color: var(--secondary);
@@ -1839,6 +1806,24 @@ h1 {
     .btn {
         flex: 1;
         padding: 0.75rem;
+    }
+    
+    .filter-controls {
+        flex-direction: column;
+        gap: 0.75rem;
+        align-items: stretch;
+    }
+    
+    .view-controls {
+        display: flex;
+        justify-content: center;
+        width: 100%;
+    }
+    
+    .view-btn {
+        flex: 1;
+        padding: 0.75rem;
+        font-size: 1rem;
     }
 }
 

@@ -31,16 +31,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const taskSearchInput = document.getElementById('taskSearchInput');
     const clearTaskSearch = document.getElementById('clearTaskSearch');
     const priorityFilter = document.getElementById('priorityFilter');
-    const statusFilter = document.getElementById('statusFilter');
+    // statusFilter removido - agora usando apenas prioridade
     const categoryFilter = document.getElementById('categoryFilter');
     const taskSortSelect = document.getElementById('taskSortSelect');
     
-    // Elementos das estatísticas
-    const totalTasks = document.getElementById('totalTasks');
-    const pendingTasks = document.getElementById('pendingTasks');
-    const inProgressTasks = document.getElementById('inProgressTasks');
-    const completedTasks = document.getElementById('completedTasks');
-    const overdueTasks = document.getElementById('overdueTasks');
+    // Elementos das estatísticas removidos
     
     // Elementos do upload de imagens
     const uploadArea = document.getElementById('uploadArea');
@@ -99,7 +94,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let filteredTasks = [];
     let currentTaskSearch = '';
     let currentPriorityFilter = '';
-    let currentStatusFilter = '';
+    // currentStatusFilter removido - agora usando apenas prioridade
     let currentCategoryFilter = '';
     let currentTaskSort = 'newest';
     
@@ -124,7 +119,7 @@ document.addEventListener('DOMContentLoaded', () => {
     taskSearchInput.addEventListener('input', handleTaskSearch);
     clearTaskSearch.addEventListener('click', clearTaskSearchInput);
     priorityFilter.addEventListener('change', handleTaskFilters);
-    statusFilter.addEventListener('change', handleTaskFilters);
+    // statusFilter event listener removido
     categoryFilter.addEventListener('change', handleTaskFilters);
     taskSortSelect.addEventListener('change', handleTaskSort);
     
@@ -215,6 +210,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function loadTasks() {
         try {
             const query = new Parse.Query(Task);
+            query.notEqualTo('status', 'Concluída'); // Filtrar tarefas concluídas
             query.descending('createdAt');
             const tasks = await query.find();
             
@@ -223,16 +219,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 title: task.get('title'),
                 description: task.get('description'),
                 priority: task.get('priority'),
-                status: task.get('status'),
                 units: task.get('units'),
-                deadline: task.get('deadline'),
+
                 dueDate: task.get('dueDate'),
                 category: task.get('category') || 'Outros',
                 createdAt: task.get('createdAt')
             }));
             
             applyTaskFilters();
-            updateTaskStats();
+            // updateTaskStats removido
         } catch (error) {
             console.error('Erro ao carregar tarefas:', error);
             showAlert('error', 'Erro ao carregar tarefas');
@@ -245,37 +240,31 @@ document.addEventListener('DOMContentLoaded', () => {
         taskCard.className = 'task-card';
         taskCard.dataset.id = task.id;
         
-        let statusClass = 'status-pending';
-        let cardStatusClass = 'status-pending';
-        if (task.status === 'Em Andamento') {
-            statusClass = 'status-in-progress';
-            cardStatusClass = 'status-in-progress';
+        // Sistema de cores baseado na prioridade
+        let priorityClass = 'priority-baixa';
+        let cardPriorityClass = 'priority-baixa';
+        if (task.priority === 'Média') {
+            priorityClass = 'priority-media';
+            cardPriorityClass = 'priority-media';
         }
-        if (task.status === 'Concluído') {
-            statusClass = 'status-completed';
-            cardStatusClass = 'status-completed';
+        if (task.priority === 'Alta') {
+            priorityClass = 'priority-alta';
+            cardPriorityClass = 'priority-alta';
         }
         
-        // Adicionar classe de status ao card para a linha colorida
-        taskCard.classList.add(cardStatusClass);
+        // Adicionar classe de prioridade ao card para a linha colorida
+        taskCard.classList.add(cardPriorityClass);
         
-        // Verificar se a tarefa está atrasada ou próxima do prazo
-        const deadlineClass = getDeadlineClass(task);
-        if (deadlineClass) {
-            taskCard.classList.add(deadlineClass);
-        }
+
         
         // Indicador de prioridade
-        const priorityClass = `priority-${task.priority.toLowerCase()}`;
-        
         taskCard.innerHTML = `
             <div class="task-header">
                 <h3 class="task-title">
-                    <span class="priority-indicator ${priorityClass}"></span>
                     ${task.title}
                     <span class="category-badge">${task.category}</span>
                 </h3>
-                <span class="task-status ${statusClass}">${task.status}</span>
+                <span class="task-priority ${priorityClass}">${task.priority}</span>
             </div>
             <p class="task-description">${task.description}</p>
             <div class="task-details">
@@ -287,10 +276,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <span class="detail-label">Unidade:</span>
                     <span class="detail-value">${task.units}</span>
                 </div>
-                <div class="detail-item">
-                    <span class="detail-label">Prazo:</span>
-                    <span class="detail-value">${task.deadline} dias</span>
-                </div>
+
                 ${task.dueDate ? `
                 <div class="detail-item">
                     <span class="detail-label">Vencimento:</span>
@@ -326,7 +312,6 @@ document.addEventListener('DOMContentLoaded', () => {
     
     function handleTaskFilters() {
         currentPriorityFilter = priorityFilter.value;
-        currentStatusFilter = statusFilter.value;
         currentCategoryFilter = categoryFilter.value;
         applyTaskFilters();
     }
@@ -350,10 +335,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 return false;
             }
             
-            // Filtro de status
-            if (currentStatusFilter && task.status !== currentStatusFilter) {
-                return false;
-            }
+            // Filtro de status removido - agora usando apenas prioridade
             
             // Filtro de categoria
             if (currentCategoryFilter && task.category !== currentCategoryFilter) {
@@ -378,11 +360,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 case 'priority':
                     const priorityOrder = { 'Alta': 3, 'Média': 2, 'Baixa': 1 };
                     return priorityOrder[b.priority] - priorityOrder[a.priority];
-                case 'deadline':
-                    return a.deadline - b.deadline;
-                case 'status':
-                    const statusOrder = { 'Pendente': 1, 'Em Andamento': 2, 'Concluído': 3 };
-                    return statusOrder[a.status] - statusOrder[b.status];
+
+                // Ordenação por status removida
                 default:
                     return 0;
             }
@@ -397,7 +376,7 @@ document.addEventListener('DOMContentLoaded', () => {
             noTasksMessage.className = 'no-tasks';
             
             let title, description;
-            if (currentTaskSearch || currentPriorityFilter || currentStatusFilter || currentCategoryFilter) {
+            if (currentTaskSearch || currentPriorityFilter || currentCategoryFilter) {
                 title = 'Nenhuma tarefa encontrada';
                 description = 'Não há tarefas que correspondam aos filtros selecionados. Tente ajustar os filtros ou adicionar uma nova tarefa.';
             } else if (allTasks.length === 0) {
@@ -422,41 +401,12 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     
-    function updateTaskStats() {
-        const total = allTasks.length;
-        const pending = allTasks.filter(task => task.status === 'Pendente').length;
-        const inProgress = allTasks.filter(task => task.status === 'Em Andamento').length;
-        const completed = allTasks.filter(task => task.status === 'Concluído').length;
-        const overdue = allTasks.filter(task => isTaskOverdue(task)).length;
-        
-        totalTasks.textContent = total;
-        pendingTasks.textContent = pending;
-        inProgressTasks.textContent = inProgress;
-        completedTasks.textContent = completed;
-        overdueTasks.textContent = overdue;
-    }
+    // função updateTaskStats removida
     
-    function getDeadlineClass(task) {
-        if (task.status === 'Concluído') return null;
-        
-        if (task.dueDate) {
-            const today = new Date();
-            const dueDate = new Date(task.dueDate);
-            const diffTime = dueDate - today;
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-            
-            if (diffDays < 0) {
-                return 'deadline-warning'; // Atrasada
-            } else if (diffDays <= 3) {
-                return 'deadline-soon'; // Próxima do prazo
-            }
-        }
-        
-        return null;
-    }
+
     
     function isTaskOverdue(task) {
-        if (task.status === 'Concluído') return false;
+        // Verificação de status removida - agora baseado apenas no prazo
         
         if (task.dueDate) {
             const today = new Date();
@@ -492,7 +442,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.getElementById('editPriority').value = task.get('priority');
                 document.getElementById('editStatus').value = task.get('status');
                 document.getElementById('editUnits').value = task.get('units');
-                document.getElementById('editDeadline').value = task.get('deadline');
+
                 document.getElementById('editDueDate').value = task.get('dueDate') || '';
                 document.getElementById('editCategory').value = task.get('category') || 'Outros';
             } catch (error) {
@@ -521,9 +471,8 @@ document.addEventListener('DOMContentLoaded', () => {
             title: document.getElementById('editTitle').value,
             description: document.getElementById('editDescription').value,
             priority: document.getElementById('editPriority').value,
-            status: document.getElementById('editStatus').value,
             units: document.getElementById('editUnits').value,
-            deadline: document.getElementById('editDeadline').value,
+
             dueDate: dueDateValue ? new Date(dueDateValue) : null,
             category: document.getElementById('editCategory').value
         };
@@ -550,7 +499,7 @@ document.addEventListener('DOMContentLoaded', () => {
             task.set('priority', taskData.priority);
             task.set('status', taskData.status);
             task.set('units', taskData.units);
-            task.set('deadline', taskData.deadline);
+
             if (taskData.dueDate) {
                 task.set('dueDate', taskData.dueDate);
             }
@@ -628,20 +577,32 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
-    function completeTask(taskId, taskCard) {
-        // Adicionar animação de fade out
-        taskCard.style.transition = 'opacity 0.5s ease-out, transform 0.5s ease-out';
-        taskCard.style.opacity = '0';
-        taskCard.style.transform = 'translateX(100%)';
-        
-        // Remover o elemento após a animação
-        setTimeout(() => {
-            taskCard.remove();
-            // Atualizar estatísticas
-            updateTaskStats();
-        }, 500);
-        
-        showAlert('success', 'Tarefa concluída!');
+    async function completeTask(taskId, taskCard) {
+        try {
+            // Buscar a tarefa no banco de dados
+            const query = new Parse.Query(Task);
+            const task = await query.get(taskId);
+            
+            // Marcar como concluída
+            task.set('status', 'Concluída');
+            await task.save();
+            
+            // Adicionar animação de fade out
+            taskCard.style.transition = 'opacity 0.5s ease-out, transform 0.5s ease-out';
+            taskCard.style.opacity = '0';
+            taskCard.style.transform = 'translateX(100%)';
+            
+            // Remover o elemento após a animação
+            setTimeout(() => {
+                taskCard.remove();
+                // Atualizar estatísticas removido
+            }, 500);
+            
+            showAlert('success', 'Tarefa concluída!');
+        } catch (error) {
+            console.error('Erro ao concluir tarefa:', error);
+            showAlert('error', 'Erro ao concluir tarefa');
+        }
     }
     
     // Funções para gerenciamento de abas
@@ -1308,7 +1269,15 @@ document.addEventListener('DOMContentLoaded', () => {
     // Funções do Google Calendar
     async function initializeGoogleCalendar() {
         try {
-            // Aguarda o carregamento da API do Google
+            // Aguarda o carregamento da API do Google com retry
+            let retries = 0;
+            const maxRetries = 10;
+            
+            while (typeof gapi === 'undefined' && retries < maxRetries) {
+                await new Promise(resolve => setTimeout(resolve, 500));
+                retries++;
+            }
+            
             if (typeof gapi === 'undefined') {
                 updateCalendarStatus('API não carregada');
                 return;
@@ -1376,6 +1345,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         try {
+            // Verifica se a API foi inicializada, se não, tenta inicializar
+            if (!googleCalendarIntegration.gapi) {
+                console.log('API não inicializada, tentando inicializar...');
+                const success = await googleCalendarIntegration.initialize();
+                if (!success) {
+                    alert('Erro ao inicializar Google Calendar. Verifique suas credenciais.');
+                    return;
+                }
+            }
+            
             if (googleCalendarIntegration.isSignedIn) {
                 await googleCalendarIntegration.signOut();
             } else {
