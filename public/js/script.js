@@ -37,10 +37,17 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Elementos das estatísticas removidos
     
-    // Elementos do upload de imagens
-    const uploadArea = document.getElementById('uploadArea');
-    const imageInput = document.getElementById('imageInput');
-    const uploadImagesBtn = document.getElementById('uploadImagesBtn');
+    // Elementos do upload de imagens (modal)
+    const uploadModalBtn = document.getElementById('upload-modal-btn');
+    const imageUploadModal = document.getElementById('imageUploadModal');
+    const closeImageModalBtn = document.getElementById('closeImageModalBtn');
+    const modalUploadArea = document.getElementById('modalUploadArea');
+    const modalImageInput = document.getElementById('modalImageInput');
+    const modalUploadImagesBtn = document.getElementById('modalUploadImagesBtn');
+    const modalCancelUploadBtn = document.getElementById('modalCancelUploadBtn');
+    const modalUploadPreview = document.getElementById('modalUploadPreview');
+    const modalPreviewContainer = document.getElementById('modalPreviewContainer');
+    const folderSelect = document.getElementById('folderSelect');
     
     // Elementos da galeria dinâmica
     const galleryContainer = document.getElementById('galleryContainer');
@@ -88,6 +95,22 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentPage = 1;
     let itemsPerPage = 12;
     let totalPages = 1;
+    let currentFolder = null; // pasta atual selecionada
+    let showingFolders = true; // se está mostrando pastas ou imagens
+    
+    // Lista de pastas disponíveis
+    const availableFolders = [
+        'Alcindo Cacela',
+        'Almirante Barroso', 
+        'Augusto Montenegro',
+        'Batista Campos',
+        'Conselheiro Furtado',
+        'Umarizal',
+        'Três Corações',
+        'Castanhal',
+        'Macapá',
+        'Canadense'
+    ];
     
     // Configurações das tarefas
     let allTasks = [];
@@ -140,61 +163,79 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // Event listeners para as abas
-    tasksTabBtn.addEventListener('click', () => switchTab('tasks'));
-    imagesTabBtn.addEventListener('click', () => switchTab('images'));
-    imageInput.addEventListener('change', handleFileSelect);
-    uploadImagesBtn.addEventListener('click', uploadImages);
+    if (tasksTabBtn) tasksTabBtn.addEventListener('click', () => switchTab('tasks'));
+    if (imagesTabBtn) imagesTabBtn.addEventListener('click', () => switchTab('images'));
+    
+    // Event listeners para o modal de upload
+    if (uploadModalBtn) uploadModalBtn.addEventListener('click', openImageUploadModal);
+    if (closeImageModalBtn) closeImageModalBtn.addEventListener('click', closeImageUploadModal);
+    if (modalCancelUploadBtn) modalCancelUploadBtn.addEventListener('click', closeImageUploadModal);
+    if (modalImageInput) modalImageInput.addEventListener('change', handleModalFileSelect);
+    if (modalUploadImagesBtn) modalUploadImagesBtn.addEventListener('click', uploadModalImages);
+    
+    // Fechar modal clicando fora dele
+    if (imageUploadModal) {
+        imageUploadModal.addEventListener('click', (e) => {
+            if (e.target === imageUploadModal) {
+                closeImageUploadModal();
+            }
+        });
+    }
     
     // Event listeners para controles da galeria
-    searchInput.addEventListener('input', handleSearch);
-    clearSearch.addEventListener('click', clearSearchInput);
-    sortSelect.addEventListener('change', handleSort);
-    gridViewBtn.addEventListener('click', () => setView('grid'));
-    listViewBtn.addEventListener('click', () => setView('list'));
-    prevPageBtn.addEventListener('click', () => changePage(currentPage - 1));
-    nextPageBtn.addEventListener('click', () => changePage(currentPage + 1));
+    if (searchInput) searchInput.addEventListener('input', handleSearch);
+    if (clearSearch) clearSearch.addEventListener('click', clearSearchInput);
+    if (sortSelect) sortSelect.addEventListener('change', handleSort);
+    if (gridViewBtn) gridViewBtn.addEventListener('click', () => setView('grid'));
+    if (listViewBtn) listViewBtn.addEventListener('click', () => setView('list'));
+    if (prevPageBtn) prevPageBtn.addEventListener('click', () => changePage(currentPage - 1));
+    if (nextPageBtn) nextPageBtn.addEventListener('click', () => changePage(currentPage + 1));
     
-    closeViewModalBtn.addEventListener('click', closeImageViewModal);
-    deleteImageBtn.addEventListener('click', deleteImage);
+    if (closeViewModalBtn) closeViewModalBtn.addEventListener('click', closeImageViewModal);
+    if (deleteImageBtn) deleteImageBtn.addEventListener('click', deleteImage);
     
     // Event Listeners para controles de imagem
-    zoomBtn.addEventListener('click', toggleZoom);
-    fullscreenBtn.addEventListener('click', toggleFullscreen);
-    prevImageBtn.addEventListener('click', showPreviousImage);
-    nextImageBtn.addEventListener('click', showNextImage);
+    if (zoomBtn) zoomBtn.addEventListener('click', toggleZoom);
+    if (fullscreenBtn) fullscreenBtn.addEventListener('click', toggleFullscreen);
+    if (prevImageBtn) prevImageBtn.addEventListener('click', showPreviousImage);
+    if (nextImageBtn) nextImageBtn.addEventListener('click', showNextImage);
     
     // Event Listeners para zoom com clique na imagem
-    fullImage.addEventListener('click', toggleZoom);
+    if (fullImage) fullImage.addEventListener('click', toggleZoom);
     
     // Event Listeners para arrastar imagem quando com zoom
-    imageContainer.addEventListener('mousedown', startDrag);
-    imageContainer.addEventListener('mousemove', drag);
-    imageContainer.addEventListener('mouseup', endDrag);
-    imageContainer.addEventListener('mouseleave', endDrag);
+    if (imageContainer) {
+        imageContainer.addEventListener('mousedown', startDrag);
+        imageContainer.addEventListener('mousemove', drag);
+        imageContainer.addEventListener('mouseup', endDrag);
+        imageContainer.addEventListener('mouseleave', endDrag);
+    }
     
     // Event Listeners para navegação com teclado
     document.addEventListener('keydown', handleKeyNavigation);
     
 
     
-    // Configurar drag and drop para upload de imagens
-    uploadArea.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        uploadArea.classList.add('dragover');
-    });
-    
-    uploadArea.addEventListener('dragleave', () => {
-        uploadArea.classList.remove('dragover');
-    });
-    
-    uploadArea.addEventListener('drop', (e) => {
-        e.preventDefault();
-        uploadArea.classList.remove('dragover');
+    // Configurar drag and drop para upload de imagens no modal
+    if (modalUploadArea) {
+        modalUploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            modalUploadArea.classList.add('dragover');
+        });
         
-        if (e.dataTransfer.files.length > 0) {
-            handleFiles(e.dataTransfer.files);
-        }
-    });
+        modalUploadArea.addEventListener('dragleave', () => {
+            modalUploadArea.classList.remove('dragover');
+        });
+        
+        modalUploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            modalUploadArea.classList.remove('dragover');
+            
+            if (e.dataTransfer.files.length > 0) {
+                handleModalFiles(e.dataTransfer.files);
+            }
+        });
+    }
     
     // Fechar modais ao clicar fora
     window.addEventListener('click', (event) => {
@@ -625,18 +666,172 @@ document.addEventListener('DOMContentLoaded', () => {
         switchTab('images');
     }
     
-    // Funções para gerenciamento de imagens (mantidas para compatibilidade)
+    // Funções para gerenciamento do modal de upload
     function openImageUploadModal() {
-        switchToImagesTab();
+        imageUploadModal.style.display = 'flex';
+        clearModalUpload();
     }
     
     function closeImageUploadModal() {
-        switchTab('tasks');
+        imageUploadModal.style.display = 'none';
+        clearModalUpload();
     }
     
-    function handleFileSelect(e) {
-        handleFiles(e.target.files);
+    function clearModalUpload() {
+        selectedFiles = [];
+        modalImageInput.value = '';
+        modalUploadPreview.style.display = 'none';
+        modalPreviewContainer.innerHTML = '';
+        modalUploadImagesBtn.disabled = true;
+        if (folderSelect) folderSelect.value = '';
     }
+    
+    function handleModalFileSelect(e) {
+        handleModalFiles(e.target.files);
+    }
+    
+    function handleModalFiles(files) {
+        if (files.length === 0) return;
+        
+        // Converter FileList para Array e filtrar apenas imagens
+        const newFiles = Array.from(files).filter(file => file.type.startsWith('image/'));
+        
+        if (newFiles.length === 0) {
+            showAlert('error', 'Por favor, selecione apenas arquivos de imagem.');
+            return;
+        }
+        
+        // Adicionar novos arquivos aos selecionados
+        selectedFiles.push(...newFiles);
+        
+        // Atualizar preview
+        updateModalPreview();
+        
+        // Habilitar botão de upload
+        modalUploadImagesBtn.disabled = selectedFiles.length === 0;
+    }
+    
+    function updateModalPreview() {
+        modalPreviewContainer.innerHTML = '';
+        
+        if (selectedFiles.length === 0) {
+            modalUploadPreview.style.display = 'none';
+            return;
+        }
+        
+        modalUploadPreview.style.display = 'block';
+        
+        selectedFiles.forEach((file, index) => {
+            const previewItem = document.createElement('div');
+            previewItem.className = 'preview-item';
+            
+            const img = document.createElement('img');
+            img.src = URL.createObjectURL(file);
+            img.alt = file.name;
+            img.className = 'preview-image';
+            
+            const fileName = document.createElement('span');
+            fileName.textContent = file.name;
+            fileName.className = 'file-name';
+            
+            const removeBtn = document.createElement('button');
+            removeBtn.innerHTML = '×';
+            removeBtn.className = 'remove-file-btn';
+            removeBtn.onclick = () => removeModalFile(index);
+            
+            previewItem.appendChild(img);
+            previewItem.appendChild(fileName);
+            previewItem.appendChild(removeBtn);
+            modalPreviewContainer.appendChild(previewItem);
+        });
+    }
+    
+    function removeModalFile(index) {
+         selectedFiles.splice(index, 1);
+         updateModalPreview();
+         modalUploadImagesBtn.disabled = selectedFiles.length === 0;
+     }
+     
+     // Função para sanitizar nomes de arquivo
+     function sanitizeFileName(fileName) {
+         // Remover caracteres especiais e acentos, manter apenas letras, números, pontos, hífens e underscores
+         const name = fileName.normalize('NFD').replace(/[\u0300-\u036f]/g, ''); // Remove acentos
+         const sanitized = name.replace(/[^a-zA-Z0-9._-]/g, '_'); // Substitui caracteres especiais por underscore
+         
+         // Garantir que não comece ou termine com ponto
+         return sanitized.replace(/^\.+|\.+$/g, '').replace(/_{2,}/g, '_'); // Remove pontos no início/fim e múltiplos underscores
+     }
+     
+     async function uploadModalImages() {
+         if (selectedFiles.length === 0) return;
+         
+         const selectedFolder = folderSelect ? folderSelect.value : '';
+         if (!selectedFolder) {
+             showAlert('error', 'Por favor, selecione uma pasta antes de fazer o upload.');
+             return;
+         }
+         
+         try {
+             modalUploadImagesBtn.disabled = true;
+             modalUploadImagesBtn.textContent = 'Enviando...';
+             
+             showAlert('info', 'Fazendo upload das imagens...');
+             
+             // Verificar se há usuário logado, senão criar usuário temporário
+             let currentUser = Parse.User.current();
+             if (!currentUser) {
+                 try {
+                     // Tentar login anônimo primeiro
+                     currentUser = await Parse.User.logInWith('anonymous');
+                     console.log('Usuário anônimo criado para upload');
+                 } catch (authError) {
+                     console.log('Login anônimo falhou, tentando criar usuário temporário:', authError);
+                     try {
+                         // Criar usuário temporário como fallback
+                         const tempUser = new Parse.User();
+                         const randomId = Math.random().toString(36).substring(7);
+                         tempUser.set('username', `temp_${randomId}`);
+                         tempUser.set('password', `temp_${randomId}_pass`);
+                         currentUser = await tempUser.signUp();
+                         console.log('Usuário temporário criado para upload');
+                     } catch (signUpError) {
+                         console.log('Erro ao criar usuário temporário:', signUpError);
+                         showAlert('warning', 'Tentando upload sem autenticação. Se falhar, consulte CONFIGURAR_UPLOAD_BACK4APP.md');
+                     }
+                 }
+             }
+             
+             for (const file of selectedFiles) {
+                 // Sanitizar nome do arquivo para evitar caracteres inválidos
+                 const sanitizedName = sanitizeFileName(file.name);
+                 
+                 // Fazer upload do arquivo
+                 const parseFile = new Parse.File(sanitizedName, file);
+                 await parseFile.save();
+                 
+                 const imageFile = new ImageFile();
+                 imageFile.set('file', parseFile);
+                 imageFile.set('name', sanitizedName);
+                 imageFile.set('folder', selectedFolder);
+                 
+                 await imageFile.save();
+             }
+             
+             showAlert('success', `${selectedFiles.length} ${selectedFiles.length === 1 ? 'imagem enviada' : 'imagens enviadas'} para a pasta "${selectedFolder}" com sucesso!`);
+             closeImageUploadModal();
+             
+             // Recarregar imagens se estivermos na aba de imagens
+             if (document.getElementById('imagesTab').classList.contains('active')) {
+                 loadImages();
+             }
+         } catch (error) {
+             console.error('Erro ao fazer upload das imagens:', error);
+             showAlert('error', 'Erro ao fazer upload das imagens: ' + error.message);
+         } finally {
+             modalUploadImagesBtn.disabled = false;
+             modalUploadImagesBtn.textContent = 'Fazer Upload';
+         }
+     }
     
     function handleFiles(files) {
         if (files.length === 0) return;
@@ -741,11 +936,20 @@ document.addEventListener('DOMContentLoaded', () => {
                     url: image.get('file').url(),
                     name: image.get('name'),
                     createdAt: image.get('createdAt'),
-                    size: image.get('file')._source?.size || 0
+                    size: image.get('file')._source?.size || 0,
+                    folder: image.get('folder') || 'Sem Pasta'
                 };
                 
                 allImages.push(imageData);
             });
+            
+            // Inicializar mostrando as pastas se não estivermos em uma pasta específica
+            if (!currentFolder) {
+                showingFolders = true;
+            }
+            
+            // Atualizar visibilidade dos controles de visualização
+            updateViewControlsVisibility();
             
             // Aplicar filtros e renderizar
             applyFiltersAndRender();
@@ -763,8 +967,19 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     function applyFiltersAndRender() {
+        if (showingFolders) {
+            renderGallery();
+            updateGalleryStats();
+            return;
+        }
+        
+        // Filtrar por pasta atual
+        let imagesToFilter = currentFolder ? 
+            allImages.filter(image => image.folder === currentFolder) : 
+            allImages;
+        
         // Aplicar busca
-        filteredImages = allImages.filter(image => {
+        filteredImages = imagesToFilter.filter(image => {
             if (!currentSearch) return true;
             return image.name.toLowerCase().includes(currentSearch.toLowerCase());
         });
@@ -798,6 +1013,11 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderGallery() {
         galleryContainer.innerHTML = '';
         
+        if (showingFolders) {
+            renderFolders();
+            return;
+        }
+        
         if (filteredImages.length === 0) {
             if (currentSearch.trim() !== '') {
                 // Estado de busca sem resultados
@@ -806,6 +1026,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div class="empty-icon">🔍</div>
                         <h3 class="empty-title">Nenhuma imagem encontrada</h3>
                         <p class="empty-description">Tente ajustar sua busca ou filtros</p>
+                        <button class="btn btn-secondary" onclick="backToFolders()">Voltar às Pastas</button>
                     </div>
                 `;
             } else if (allImages.length === 0) {
@@ -813,8 +1034,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 galleryContainer.innerHTML = `
                     <div class="gallery-empty">
                         <div class="empty-icon">📷</div>
-                        <h3 class="empty-title">Sua galeria está vazia</h3>
-                        <p class="empty-description">Comece fazendo upload de suas primeiras imagens</p>
+                        <h3 class="empty-title">Esta pasta está vazia</h3>
+                        <p class="empty-description">Faça upload de imagens para esta pasta</p>
+                        <button class="btn btn-secondary" onclick="backToFolders()">Voltar às Pastas</button>
                     </div>
                 `;
             } else {
@@ -824,6 +1046,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div class="empty-icon">🎯</div>
                         <h3 class="empty-title">Nenhuma imagem corresponde aos filtros</h3>
                         <p class="empty-description">Tente alterar os critérios de ordenação</p>
+                        <button class="btn btn-secondary" onclick="backToFolders()">Voltar às Pastas</button>
                     </div>
                 `;
             }
@@ -849,8 +1072,102 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     
+    function renderFolders() {
+        galleryContainer.className = 'gallery-container';
+        
+        // Adicionar botão de voltar se necessário e título
+        const headerDiv = document.createElement('div');
+        headerDiv.className = 'folders-header';
+        headerDiv.innerHTML = `
+            <h3>Selecione uma Pasta</h3>
+            <p>Escolha uma das pastas abaixo para visualizar as imagens</p>
+        `;
+        galleryContainer.appendChild(headerDiv);
+        
+        // Renderizar pastas
+        availableFolders.forEach((folder, index) => {
+            setTimeout(() => {
+                const folderItem = createFolderItem(folder);
+                folderItem.style.animationDelay = `${index * 0.1}s`;
+                galleryContainer.appendChild(folderItem);
+            }, index * 100);
+        });
+    }
+    
+    function createFolderItem(folderName) {
+        const folderItem = document.createElement('div');
+        folderItem.className = 'folder-item';
+        folderItem.onclick = () => openFolder(folderName);
+        
+        // Contar imagens na pasta
+        const imageCount = allImages.filter(img => img.folder === folderName).length;
+        
+        folderItem.innerHTML = `
+            <div class="folder-icon">📁</div>
+            <div class="folder-info">
+                <div class="folder-name">${folderName}</div>
+                <div class="folder-count">${imageCount} ${imageCount === 1 ? 'imagem' : 'imagens'}</div>
+            </div>
+        `;
+        
+        return folderItem;
+    }
+    
+    function openFolder(folderName) {
+        currentFolder = folderName;
+        showingFolders = false;
+        currentPage = 1;
+        
+        // Atualizar título da galeria
+        const galleryHeader = document.querySelector('.gallery-header h3');
+        if (galleryHeader) {
+            galleryHeader.innerHTML = `
+                <button class="back-btn" onclick="backToFolders()">Voltar</button>
+                Pasta: ${folderName}
+            `;
+        }
+        
+        // Atualizar visibilidade dos controles de visualização
+        updateViewControlsVisibility();
+        
+        applyFiltersAndRender();
+    }
+    
+    function backToFolders() {
+        currentFolder = null;
+        showingFolders = true;
+        currentPage = 1;
+        currentSearch = '';
+        
+        // Limpar busca
+        if (searchInput) searchInput.value = '';
+        if (clearSearch) clearSearch.style.display = 'none';
+        
+        // Restaurar título da galeria
+        const galleryHeader = document.querySelector('.gallery-header h3');
+        if (galleryHeader) {
+            galleryHeader.textContent = 'Galeria de Imagens';
+        }
+        
+        // Atualizar visibilidade dos controles de visualização
+        updateViewControlsVisibility();
+        
+        applyFiltersAndRender();
+    }
+    
+    // Tornar a função global para uso nos botões
+    window.backToFolders = backToFolders;
+    
     function updateGalleryStats() {
-        const total = allImages.length;
+        if (showingFolders) {
+            const totalFolders = availableFolders.length;
+            imageCount.textContent = `${totalFolders} ${totalFolders === 1 ? 'pasta' : 'pastas'}`;
+            return;
+        }
+        
+        const total = currentFolder ? 
+            allImages.filter(img => img.folder === currentFolder).length : 
+            allImages.length;
         const filtered = filteredImages.length;
         
         if (currentSearch && filtered !== total) {
@@ -915,6 +1232,14 @@ document.addEventListener('DOMContentLoaded', () => {
         currentPage = 1;
         
         applyFiltersAndRender();
+    }
+    
+    function updateViewControlsVisibility() {
+        const viewControls = document.querySelector('.view-controls');
+        if (viewControls) {
+            // Mostrar controles apenas quando estiver dentro de uma pasta (não mostrando pastas)
+            viewControls.style.display = showingFolders ? 'none' : 'flex';
+        }
     }
     
     function changePage(page) {
@@ -1288,7 +1613,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 // Verifica se as credenciais estão configuradas
                 if (!googleCalendarIntegration.areCredentialsConfigured()) {
-                    updateCalendarStatus('Credenciais não configuradas');
+                    updateCalendarStatus('⚠️ Credenciais não configuradas - Clique para instruções');
                     return;
                 }
                 
@@ -1344,6 +1669,17 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         
+        // Verifica se as credenciais estão configuradas
+        if (!googleCalendarIntegration.areCredentialsConfigured()) {
+            alert('⚠️ Credenciais do Google Calendar não configuradas!\n\n' +
+                  'Para usar a integração com Google Calendar, você precisa:\n\n' +
+                  '1. Configurar um projeto no Google Cloud Console\n' +
+                  '2. Obter CLIENT_ID e API_KEY\n' +
+                  '3. Configurar as credenciais no arquivo google-calendar-config.js\n\n' +
+                  'Consulte o arquivo GOOGLE_CALENDAR_SETUP.md para instruções detalhadas.');
+            return;
+        }
+        
         try {
             // Verifica se a API foi inicializada, se não, tenta inicializar
             if (!googleCalendarIntegration.gapi) {
@@ -1363,7 +1699,16 @@ document.addEventListener('DOMContentLoaded', () => {
             updateCalendarStatus();
         } catch (error) {
             console.error('Erro na autenticação:', error);
-            alert('Erro ao conectar com Google Calendar. Tente novamente.');
+            if (error.message.includes('AuthInstance não disponível')) {
+                alert('⚠️ Erro de autenticação do Google Calendar\n\n' +
+                      'Possíveis causas:\n' +
+                      '• Credenciais inválidas ou mal configuradas\n' +
+                      '• Domínio não autorizado (deve ser http://localhost:3000)\n' +
+                      '• API do Google Calendar não habilitada\n\n' +
+                      'Verifique o arquivo GOOGLE_CALENDAR_SETUP.md para mais detalhes.');
+            } else {
+                alert('Erro ao conectar com Google Calendar. Tente novamente.');
+            }
         }
     }
     

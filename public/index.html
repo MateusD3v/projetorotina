@@ -88,18 +88,6 @@
         <!-- Aba de Imagens -->
         <div class="tab-content" id="imagesTab">
             <div class="images-section">
-                <div class="upload-area" id="uploadArea">
-                    <i class="fas fa-cloud-upload-alt"></i>
-                    <p>Arraste e solte imagens aqui ou</p>
-                    <label for="imageInput" class="upload-btn">Selecionar Imagens</label>
-                    <input type="file" id="imageInput" accept="image/*" multiple style="display: none;">
-                </div>
-                
-                <div class="upload-preview" id="uploadPreview" style="display: none;">
-                    <h3>Imagens selecionadas:</h3>
-                    <div class="preview-container" id="previewContainer"></div>
-                    <button class="btn btn-primary" id="uploadImagesBtn" disabled>Fazer Upload</button>
-                </div>
                 
                 <div class="images-gallery" id="imagesGallery">
                     <div class="gallery-header">
@@ -107,6 +95,12 @@
                         <div class="gallery-stats" id="galleryStats">
                             <span id="imageCount">0 imagens</span>
                         </div>
+                    </div>
+                    <div class="upload-button-container">
+                        <button id="upload-modal-btn" class="btn btn-secondary upload-modal-btn">
+                            <span class="upload-icon">📁</span>
+                            Upload de Imagens
+                        </button>
                     </div>
                     
                     <!-- Controles da Galeria -->
@@ -245,22 +239,35 @@
                 <span class="close-btn" id="closeImageModalBtn">&times;</span>
             </div>
             <div class="modal-body">
-                <div class="upload-area" id="uploadArea">
+                <div class="form-group">
+                    <label for="folderSelect">Selecionar Pasta:</label>
+                    <select id="folderSelect" class="folder-select" required>
+                        <option value="">Escolha uma pasta...</option>
+                        <option value="Alcindo Cacela">Alcindo Cacela</option>
+                        <option value="Almirante Barroso">Almirante Barroso</option>
+                        <option value="Augusto Montenegro">Augusto Montenegro</option>
+                        <option value="Batista Campos">Batista Campos</option>
+                        <option value="Conselheiro Furtado">Conselheiro Furtado</option>
+                        <option value="Umarizal">Umarizal</option>
+                        <option value="Três Corações">Três Corações</option>
+                        <option value="Castanhal">Castanhal</option>
+                        <option value="Macapá">Macapá</option>
+                        <option value="Canadense">Canadense</option>
+                    </select>
+                </div>
+                
+                <div class="upload-area" id="modalUploadArea">
                     <i class="fas fa-cloud-upload-alt"></i>
                     <p>Arraste e solte imagens aqui ou</p>
-                    <label for="imageInput" class="upload-btn">Selecionar Imagens</label>
-                    <input type="file" id="imageInput" accept="image/*" multiple style="display: none;">
+                    <label for="modalImageInput" class="upload-btn">Selecionar Imagens</label>
+                    <input type="file" id="modalImageInput" accept="image/*" multiple style="display: none;">
                 </div>
                 
-                <div class="upload-preview" id="uploadPreview">
+                <div class="upload-preview" id="modalUploadPreview" style="display: none;">
                     <h3>Imagens selecionadas:</h3>
-                    <div class="preview-container" id="previewContainer"></div>
-                    <button class="btn btn-primary" id="uploadImagesBtn" disabled>Fazer Upload</button>
-                </div>
-                
-                <div class="images-gallery" id="imagesGallery">
-                    <h3>Galeria de Imagens</h3>
-                    <div class="gallery-container" id="galleryContainer"></div>
+                    <div class="preview-container" id="modalPreviewContainer"></div>
+                    <button class="btn btn-primary" id="modalUploadImagesBtn" disabled>Fazer Upload</button>
+                    <button class="btn btn-secondary" id="modalCancelUploadBtn">Cancelar</button>
                 </div>
             </div>
         </div>

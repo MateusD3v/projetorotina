@@ -981,12 +981,12 @@ h1 {
     background: linear-gradient(transparent, rgba(0, 0, 0, 0.8));
     color: white;
     padding: 20px 15px 15px;
-    opacity: 0;
+    opacity: 1;
     transition: opacity 0.3s ease;
 }
 
 .gallery-item:hover .image-overlay {
-    opacity: 1;
+    background: linear-gradient(transparent, rgba(0, 0, 0, 0.9));
 }
 
 .image-overlay .image-name {
@@ -1096,6 +1096,84 @@ h1 {
     font-size: 18px;
     font-weight: 600;
     margin: 0;
+}
+
+/* Folder styles */
+.folder-item {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 12px;
+    padding: 1.5rem;
+    text-align: center;
+    color: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    min-height: 150px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.folder-item:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+}
+
+.folder-item::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, rgba(255, 255, 255, 0.1) 0%, transparent 100%);
+    pointer-events: none;
+}
+
+.folder-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    opacity: 0.9;
+}
+
+.folder-name {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.folder-count {
+    font-size: 0.9rem;
+    opacity: 0.8;
+    font-weight: 400;
+}
+
+.back-to-folders-btn {
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+
+.back-to-folders-btn:hover {
+    background: var(--primary-dark);
+    transform: translateY(-2px);
+}
+
+.back-to-folders-btn i {
+    font-size: 1rem;
 }
 
 .gallery-empty .empty-description {
@@ -1379,7 +1457,6 @@ h1 {
     justify-content: center;
     gap: 1rem;
     padding: 15px;
-    background: rgba(0, 0, 0, 0.1);
     border-radius: 0 0 8px 8px;
 }
 
@@ -1636,6 +1713,98 @@ h1 {
     border-color: #2980b9;
 }
 
+/* Estilos para o botão de upload modal */
+.upload-modal-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    margin-left: 0.5rem;
+}
+
+.images-section {
+    position: relative;
+}
+
+.upload-modal-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+    background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+}
+
+.upload-button-container {
+    margin-bottom: 1rem;
+    display: flex;
+    justify-content: flex-start;
+}
+
+.upload-icon {
+    font-size: 1.1em;
+}
+
+/* Estilos para preview de arquivos no modal */
+.preview-item {
+    position: relative;
+    display: inline-block;
+    margin: 0.5rem;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.preview-image {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    display: block;
+}
+
+.file-name {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(0,0,0,0.7);
+    color: white;
+    padding: 0.25rem;
+    font-size: 0.8rem;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.remove-file-btn {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background: rgba(255,0,0,0.8);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 25px;
+    height: 25px;
+    cursor: pointer;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s;
+}
+
+.remove-file-btn:hover {
+    background: rgba(255,0,0,1);
+}
+
 @keyframes modalFadeIn {
     from {
         opacity: 0;
@@ -1662,15 +1831,37 @@ h1 {
 }
 
 .close-btn {
-    font-size: 1.8rem;
+    font-size: 2.2rem;
     cursor: pointer;
-    color: var(--secondary);
-    transition: color 0.2s;
-    line-height: 1;
+    color: white;
+    transition: all 0.3s ease;
+    line-height: 0;
+    position: absolute;
+    top: 15px;
+    left: 20px;
+    z-index: 1000;
+    background: rgba(0, 0, 0, 0.7);
+    border-radius: 50%;
+    width: 45px;
+    height: 45px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: normal;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+    text-align: center;
+    padding: 0;
+    margin: 0;
+    border: none;
+    outline: none;
+    font-family: Arial, sans-serif;
+    vertical-align: middle;
 }
 
 .close-btn:hover {
     color: var(--danger);
+    background: rgba(0, 0, 0, 0.9);
+    transform: scale(1.1);
 }
 
 .form-group {
@@ -1890,6 +2081,58 @@ h1 {
 }
 
 /* Responsividade para alertas */
+
+/* Estilos para o botão de voltar */
+.back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(44, 62, 80, 0.2);
+    margin: 1rem 0;
+    position: relative;
+    overflow: hidden;
+}
+
+.back-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s ease;
+}
+
+.back-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(44, 62, 80, 0.3);
+    background: linear-gradient(135deg, #34495e, #2c3e50);
+}
+
+.back-btn:hover::before {
+    left: 100%;
+}
+
+.back-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(44, 62, 80, 0.2);
+}
+
+.back-btn:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.3);
+}
 @media (max-width: 480px) {
     .alert {
         right: 10px;
