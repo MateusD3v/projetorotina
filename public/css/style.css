@@ -79,7 +79,7 @@ h1 {
 }
 
 .tab-btn:hover {
-    background-color: var(--primary);
+    background-color: var(--primary) !important;
     color: white;
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
@@ -186,15 +186,31 @@ h1 {
 /* Indicadores de Prioridade removidos */
 
 .priority-alta {
+    background-color: var(--danger);
+}
     /* Cor de fundo removida */
+.priority-alta {
+    background-color: var(--danger);
 }
 
 .priority-média {
     background-color: var(--warning);
 }
 
-.priority-baixa {
-    /* Cor de fundo removida */
+/* Estilos para spans de prioridade - sem cor de fundo */
+.task-priority.priority-baixa {
+    color: #3498db;
+    font-weight: 600;
+}
+
+.task-priority.priority-media {
+    color: #f39c12;
+    font-weight: 600;
+}
+
+.task-priority.priority-alta {
+    color: #e74c3c;
+    font-weight: 600;
 }
 
 /* Indicadores de Status Melhorados */
@@ -326,7 +342,15 @@ h1 {
 
 /* Indicadores de prazo mais visíveis */
 .deadline-warning {
+    background-color: rgba(231, 76, 60, 0.1);
+    padding: 0.5rem;
+    border-radius: 4px;
+}
     /* Animação piscante removida */
+.deadline-warning {
+    background-color: rgba(231, 76, 60, 0.1);
+    padding: 0.5rem;
+    border-radius: 4px;
 }
 
 @keyframes pulse {
@@ -1100,8 +1124,8 @@ h1 {
 
 /* Folder styles */
 .folder-item {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border-radius: 12px;
+    background-color: var(--primary);
+    border-radius: 8px;
     padding: 1.5rem;
     text-align: center;
     color: white;
@@ -1114,12 +1138,13 @@ h1 {
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .folder-item:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    background-color: #1a252f;
 }
 
 .folder-item::before {
@@ -1715,20 +1740,22 @@ h1 {
 
 /* Estilos para o botão de upload modal */
 .upload-modal-btn {
+    position: static;
+    margin: 1rem 0 1.5rem 0;
+    border-radius: 8px;
+    padding: 0.75rem 1.5rem;
+    font-size: 0.9rem;
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
-    padding: 0.75rem 1.5rem;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    max-width: none;
+    width: auto;
+    background-color: var(--primary) !important;
     color: white;
     border: none;
-    border-radius: 12px;
-    font-size: 0.9rem;
-    font-weight: 600;
     cursor: pointer;
     transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-    margin-left: 0.5rem;
 }
 
 .images-section {
@@ -1736,9 +1763,9 @@ h1 {
 }
 
 .upload-modal-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
-    background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    background-color: #1a252f !important;
 }
 
 .upload-button-container {
@@ -2138,5 +2165,328 @@ h1 {
         right: 10px;
         left: 10px;
         min-width: auto;
+    }
+}
+
+/* ===== ESTILOS PARA ABA DE NOTAS ===== */
+
+/* Controles das Notas */
+.notes-controls {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    margin-bottom: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.notes-controls .search-container {
+    position: relative;
+    flex: 1;
+}
+
+.notes-controls .filter-controls {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.view-toggle-btn {
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: 0.75rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 45px;
+}
+
+.view-toggle-btn:hover {
+    background: var(--secondary);
+    transform: translateY(-2px);
+}
+
+/* Container das Notas */
+.notes-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1rem;
+    padding: 1rem 0;
+}
+
+.notes-container.list-view {
+    grid-template-columns: 1fr;
+}
+
+/* Card de Nota */
+.note-card {
+    background: #fff475;
+    border-radius: 8px;
+    padding: 1rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    min-height: 120px;
+    display: flex;
+    flex-direction: column;
+}
+
+.note-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+.note-card.yellow { background-color: #fff475; }
+.note-card.orange { background-color: #ffcc80; }
+.note-card.red { background-color: #f28b82; }
+.note-card.pink { background-color: #fdcfe8; }
+.note-card.purple { background-color: #d7aefb; }
+.note-card.blue { background-color: #aecbfa; }
+.note-card.teal { background-color: #a7ffeb; }
+.note-card.green { background-color: #ccff90; }
+.note-card.brown { background-color: #e6c9a8; }
+.note-card.gray { background-color: #e8eaed; }
+
+.note-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--primary);
+    margin-bottom: 0.5rem;
+    word-wrap: break-word;
+}
+
+.note-content {
+    flex: 1;
+    color: var(--secondary);
+    line-height: 1.5;
+    word-wrap: break-word;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    white-space: pre-wrap;
+    margin-bottom: 0.5rem;
+}
+
+.note-footer {
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.8rem;
+    color: var(--gray);
+}
+
+.note-date {
+    font-size: 0.8rem;
+    color: var(--gray);
+}
+
+.note-reminder {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    color: var(--warning);
+    font-size: 0.8rem;
+}
+
+.note-reminder i {
+    font-size: 0.7rem;
+}
+
+/* Modal de Nota */
+.note-modal-content {
+    max-width: 600px;
+    width: 90%;
+}
+
+.note-title-input {
+    width: 100%;
+    padding: 0.75rem;
+    border: none;
+    border-bottom: 2px solid #e1e8ed;
+    background: transparent;
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--primary);
+    outline: none;
+    transition: border-color 0.3s ease;
+}
+
+.note-title-input:focus {
+    border-bottom-color: var(--accent);
+}
+
+.note-content-textarea {
+    width: 100%;
+    min-height: 200px;
+    padding: 1rem;
+    border: 2px solid #e1e8ed;
+    border-radius: 8px;
+    background: white;
+    color: var(--primary);
+    font-size: 1rem;
+    line-height: 1.5;
+    resize: vertical;
+    outline: none;
+    transition: border-color 0.3s ease;
+    font-family: inherit;
+}
+
+.note-content-textarea:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+}
+
+/* Estilos para preview e ações das notas */
+.note-content-preview {
+    color: #666;
+    font-size: 0.9rem;
+    line-height: 1.4;
+    margin: 0.5rem 0;
+    word-wrap: break-word;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    overflow: hidden;
+}
+
+.note-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+    flex-shrink: 0;
+    z-index: 10;
+}
+
+.note-expand-btn,
+.note-delete-btn {
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(0, 0, 0, 0.3);
+    border-radius: 4px;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: #555;
+    flex-shrink: 0;
+    white-space: nowrap;
+    z-index: 15;
+}
+
+.note-expand-btn:hover {
+    background: rgba(255, 255, 255, 0.95);
+    border-color: var(--accent);
+    color: var(--accent);
+    transform: translateY(-1px);
+}
+
+.note-delete-btn:hover {
+    background: rgba(231, 76, 60, 0.1);
+    border-color: #e74c3c;
+    color: #e74c3c;
+    transform: translateY(-1px);
+}
+
+.note-expand-btn:active,
+.note-delete-btn:active {
+    transform: translateY(0);
+}
+
+.note-reminder-input {
+    width: 100%;
+    padding: 0.75rem;
+    border: 2px solid #e1e8ed;
+    border-radius: 8px;
+    background: white;
+    color: var(--primary);
+    font-size: 0.9rem;
+    outline: none;
+    transition: border-color 0.3s ease;
+}
+
+.note-reminder-input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+}
+
+/* Seletor de Cores */
+.color-picker {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-top: 0.5rem;
+}
+
+.color-option {
+    width: 32px;
+    height: 32px;
+    border: 3px solid transparent;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.color-option:hover {
+    transform: scale(1.1);
+    border-color: var(--primary);
+}
+
+.color-option.active {
+    border-color: var(--primary);
+    transform: scale(1.1);
+}
+
+.color-option.active::after {
+    content: '✓';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: var(--primary);
+    font-weight: bold;
+    font-size: 0.8rem;
+}
+
+/* Responsividade para Notas */
+@media (max-width: 768px) {
+    .notes-container {
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 0.75rem;
+    }
+    
+    .note-modal-content {
+        width: 95%;
+        margin: 1rem;
+    }
+    
+    .notes-controls .filter-controls {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .view-toggle-btn {
+        align-self: flex-start;
+    }
+}
+
+@media (max-width: 480px) {
+    .notes-container {
+        grid-template-columns: 1fr;
+    }
+    
+    .color-picker {
+        justify-content: center;
     }
 }

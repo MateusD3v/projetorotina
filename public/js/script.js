@@ -11,6 +11,13 @@ const Task = Parse.Object.extend('Task');
 // Definir a classe Image para armazenar imagens no Back4App
 const ImageFile = Parse.Object.extend('ImageFile');
 
+// Definir a classe Note para armazenar notas no Back4App
+const Note = Parse.Object.extend('Note');
+
+// Variáveis globais para notas
+let selectedNoteColor = 'yellow';
+let allNotes = [];
+
 document.addEventListener('DOMContentLoaded', () => {
     const tasksContainer = document.getElementById('tasksContainer');
     const addTaskBtn = document.getElementById('addTaskBtn');
@@ -24,8 +31,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // Elementos das abas
     const tasksTabBtn = document.getElementById('tasksTabBtn');
     const imagesTabBtn = document.getElementById('imagesTabBtn');
+    const notesTabBtn = document.getElementById('notesTabBtn');
     const tasksTab = document.getElementById('tasksTab');
     const imagesTab = document.getElementById('imagesTab');
+    const notesTab = document.getElementById('notesTab');
     
     // Elementos dos controles de tarefas
     const taskSearchInput = document.getElementById('taskSearchInput');
@@ -76,6 +85,27 @@ document.addEventListener('DOMContentLoaded', () => {
     const nextImageBtn = document.getElementById('nextImageBtn');
     const imageCounter = document.getElementById('imageCounter');
     
+    // Elementos da aba de notas
+    const addNoteBtn = document.getElementById('addNoteBtn');
+    const noteModal = document.getElementById('noteModal');
+    const closeNoteModalBtn = document.getElementById('closeNoteModalBtn');
+    const cancelNoteBtn = document.getElementById('cancelNoteBtn');
+    const saveNoteBtn = document.getElementById('saveNoteBtn');
+    const deleteNoteBtn = document.getElementById('deleteNoteBtn');
+    const noteForm = document.getElementById('noteForm');
+    const noteTitle = document.getElementById('noteTitle');
+    const noteContent = document.getElementById('noteContent');
+    const noteReminder = document.getElementById('noteReminder');
+    const editNoteId = document.getElementById('editNoteId');
+    const noteModalTitle = document.getElementById('noteModalTitle');
+    const notesContainer = document.getElementById('notesContainer');
+    const noteSearchInput = document.getElementById('noteSearchInput');
+    const clearNoteSearch = document.getElementById('clearNoteSearch');
+    const noteColorFilter = document.getElementById('noteColorFilter');
+    const noteSortSelect = document.getElementById('noteSortSelect');
+    const notesViewToggle = document.getElementById('notesViewToggle');
+    const colorOptions = document.querySelectorAll('.color-option');
+    
     let currentTaskId = null;
     let selectedFiles = [];
     let currentImageId = null;
@@ -97,6 +127,13 @@ document.addEventListener('DOMContentLoaded', () => {
     let totalPages = 1;
     let currentFolder = null; // pasta atual selecionada
     let showingFolders = true; // se está mostrando pastas ou imagens
+    
+    // Configurações das notas
+    let currentNoteSearch = '';
+    let currentNoteColorFilter = '';
+    let currentNoteSort = 'newest';
+    let currentNoteId = null;
+    let notesViewMode = 'grid'; // 'grid' ou 'list'
     
     // Lista de pastas disponíveis
     const availableFolders = [
@@ -120,6 +157,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // currentStatusFilter removido - agora usando apenas prioridade
     let currentCategoryFilter = '';
     let currentTaskSort = 'newest';
+    let isLoadingTasks = false;
+    let loadTasksTimeout = null;
+    
+    // Configurações das notas (variáveis já declaradas anteriormente)
+    let isLoadingNotes = false;
+    let loadNotesTimeout = null;
     
 
     
@@ -165,6 +208,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Event listeners para as abas
     if (tasksTabBtn) tasksTabBtn.addEventListener('click', () => switchTab('tasks'));
     if (imagesTabBtn) imagesTabBtn.addEventListener('click', () => switchTab('images'));
+    if (notesTabBtn) notesTabBtn.addEventListener('click', () => switchTab('notes'));
     
     // Event listeners para o modal de upload
     if (uploadModalBtn) uploadModalBtn.addEventListener('click', openImageUploadModal);
@@ -245,34 +289,90 @@ document.addEventListener('DOMContentLoaded', () => {
         if (event.target === imageViewModal) {
             closeImageViewModal();
         }
+        if (event.target === noteModal) {
+            closeNoteModal();
+        }
     });
     
-    // Carregar tarefas do Parse
-    async function loadTasks() {
-        try {
-            const query = new Parse.Query(Task);
-            query.notEqualTo('status', 'Concluída'); // Filtrar tarefas concluídas
-            query.descending('createdAt');
-            const tasks = await query.find();
-            
-            allTasks = tasks.map(task => ({
-                id: task.id,
-                title: task.get('title'),
-                description: task.get('description'),
-                priority: task.get('priority'),
-                units: task.get('units'),
-
-                dueDate: task.get('dueDate'),
-                category: task.get('category') || 'Outros',
-                createdAt: task.get('createdAt')
-            }));
-            
-            applyTaskFilters();
-            // updateTaskStats removido
-        } catch (error) {
-            console.error('Erro ao carregar tarefas:', error);
-            showAlert('error', 'Erro ao carregar tarefas');
+    // Event listeners para a aba de notas
+    if (addNoteBtn) addNoteBtn.addEventListener('click', () => openNoteModal());
+    if (closeNoteModalBtn) closeNoteModalBtn.addEventListener('click', closeNoteModal);
+    if (cancelNoteBtn) cancelNoteBtn.addEventListener('click', closeNoteModal);
+    if (deleteNoteBtn) deleteNoteBtn.addEventListener('click', deleteNote);
+    if (noteForm) noteForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        saveNote();
+    });
+    
+    // Event listeners para controles de notas
+    if (noteSearchInput) noteSearchInput.addEventListener('input', handleNoteSearch);
+    if (clearNoteSearch) clearNoteSearch.addEventListener('click', clearNoteSearchInput);
+    if (noteColorFilter) noteColorFilter.addEventListener('change', handleNoteFilters);
+    if (noteSortSelect) noteSortSelect.addEventListener('change', handleNoteSort);
+    if (notesViewToggle) notesViewToggle.addEventListener('click', toggleNotesView);
+    
+    // Event listeners para seleção de cores
+    colorOptions.forEach(option => {
+        option.addEventListener('click', (e) => {
+            e.preventDefault();
+            selectNoteColor(option.dataset.color);
+        });
+    });
+    
+    // Event listener para botões de exclusão de notas
+    notesContainer.addEventListener('click', (e) => {
+        if (e.target.classList.contains('note-delete-btn')) {
+            e.stopPropagation();
+            const noteId = e.target.dataset.noteId;
+            deleteNote(noteId);
         }
+    });
+
+    // Carregar notas
+    loadNotes();
+    
+    // Carregar tarefas do Parse com debounce
+    async function loadTasks() {
+        // Evita múltiplas chamadas simultâneas
+        if (isLoadingTasks) {
+            return;
+        }
+        
+        // Cancela timeout anterior se existir
+        if (loadTasksTimeout) {
+            clearTimeout(loadTasksTimeout);
+        }
+        
+        // Debounce de 100ms para evitar chamadas excessivas
+        loadTasksTimeout = setTimeout(async () => {
+            isLoadingTasks = true;
+            try {
+                const query = new Parse.Query(Task);
+                query.notEqualTo('status', 'Concluída'); // Filtrar tarefas concluídas
+                query.descending('createdAt');
+                const tasks = await query.find();
+                
+                allTasks = tasks.map(task => ({
+                    id: task.id,
+                    title: task.get('title'),
+                    description: task.get('description'),
+                    priority: task.get('priority'),
+                    units: task.get('units'),
+
+                    dueDate: task.get('dueDate'),
+                    category: task.get('category') || 'Outros',
+                    createdAt: task.get('createdAt')
+                }));
+                
+                applyTaskFilters();
+                // updateTaskStats removido
+            } catch (error) {
+                console.error('Erro ao carregar tarefas:', error);
+                showAlert('error', 'Erro ao carregar tarefas');
+            } finally {
+                isLoadingTasks = false;
+            }
+        }, 100);
     }
     
     // Criar card de tarefa
@@ -572,7 +672,28 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             
             closeModal();
-            loadTasks();
+            // Otimização: recarregar apenas se necessário
+            if (isNewTask) {
+                loadTasks();
+            } else {
+                // Para edições, atualizar apenas o item específico
+                const taskIndex = allTasks.findIndex(t => t.id === currentTaskId);
+                if (taskIndex !== -1) {
+                    allTasks[taskIndex] = {
+                        id: currentTaskId,
+                        title: taskData.title,
+                        description: taskData.description,
+                        priority: taskData.priority,
+                        units: taskData.units,
+                        dueDate: taskData.dueDate,
+                        category: taskData.category,
+                        createdAt: allTasks[taskIndex].createdAt
+                    };
+                    applyTaskFilters();
+                } else {
+                    loadTasks();
+                }
+            }
         } catch (error) {
             console.error('Erro ao salvar tarefa:', error);
             showAlert('error', 'Erro ao salvar tarefa');
@@ -593,7 +714,9 @@ document.addEventListener('DOMContentLoaded', () => {
             
             showAlert('success', 'Tarefa excluída com sucesso!');
             closeModal();
-            loadTasks();
+            // Otimização: remover da lista local em vez de recarregar tudo
+            allTasks = allTasks.filter(t => t.id !== currentTaskId);
+            applyTaskFilters();
         } catch (error) {
             console.error('Erro ao excluir tarefa:', error);
             showAlert('error', 'Erro ao excluir tarefa');
@@ -659,6 +782,11 @@ document.addEventListener('DOMContentLoaded', () => {
         // Carregar imagens se for a aba de imagens
         if (tabName === 'images') {
             loadImages();
+        }
+        
+        // Carregar notas se for a aba de notas
+        if (tabName === 'notes') {
+            loadNotes();
         }
     }
     
@@ -1799,9 +1927,419 @@ document.addEventListener('DOMContentLoaded', () => {
         return icons[type] || icons.info;
     }
 
+    // ===== FUNÇÕES PARA GERENCIAMENTO DE NOTAS =====
+    
+    // Carregar notas do Parse
+    async function loadNotes() {
+        // Implementar debounce para evitar múltiplas chamadas
+        if (isLoadingNotes) {
+            return;
+        }
+        
+        if (loadNotesTimeout) {
+            clearTimeout(loadNotesTimeout);
+        }
+        
+        loadNotesTimeout = setTimeout(async () => {
+            if (isLoadingNotes) {
+                return;
+            }
+            
+            isLoadingNotes = true;
+            
+            try {
+                const query = new Parse.Query(Note);
+                query.descending('createdAt');
+                const notes = await query.find();
+                
+                allNotes = notes.map(note => ({
+                    id: note.id,
+                    title: note.get('title'),
+                    content: note.get('content'),
+                    color: note.get('color') || 'yellow',
+                    reminder: note.get('reminder'),
+                    createdAt: note.get('createdAt'),
+                    updatedAt: note.get('updatedAt')
+                }));
+                
+                applyNoteFilters();
+            } catch (error) {
+                console.error('Erro ao carregar notas:', error);
+                showAlert('error', 'Erro ao carregar notas');
+            } finally {
+                isLoadingNotes = false;
+            }
+        }, 100);
+    }
+    
+    // Aplicar filtros e busca nas notas
+    function applyNoteFilters() {
+        let filteredNotes = [...allNotes];
+        
+        // Aplicar busca
+        if (currentNoteSearch) {
+            filteredNotes = filteredNotes.filter(note => 
+                note.title.toLowerCase().includes(currentNoteSearch.toLowerCase()) ||
+                note.content.toLowerCase().includes(currentNoteSearch.toLowerCase())
+            );
+        }
+        
+        // Aplicar filtro de cor
+        if (currentNoteColorFilter && currentNoteColorFilter !== 'all') {
+            filteredNotes = filteredNotes.filter(note => note.color === currentNoteColorFilter);
+        }
+        
+        // Aplicar ordenação
+        switch (currentNoteSort) {
+            case 'newest':
+                filteredNotes.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+                break;
+            case 'oldest':
+                filteredNotes.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+                break;
+            case 'title':
+                filteredNotes.sort((a, b) => a.title.localeCompare(b.title));
+                break;
+            case 'updated':
+                filteredNotes.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+                break;
+        }
+        
+        displayNotes(filteredNotes);
+    }
+    
+    // Exibir notas na interface
+    function displayNotes(notes) {
+        if (!notesContainer) return;
+        
+        notesContainer.innerHTML = '';
+        
+        if (notes.length === 0) {
+            notesContainer.innerHTML = `
+                <div class="empty-state">
+                    <p>Nenhuma nota encontrada</p>
+                    <button onclick="openNoteModal()" class="btn btn-primary">Criar primeira nota</button>
+                </div>
+            `;
+            return;
+        }
+        
+        notes.forEach(note => {
+            const noteCard = createNoteCard(note);
+            notesContainer.appendChild(noteCard);
+        });
+    }
+    
+    // Criar card de nota
+    function createNoteCard(note) {
+        const noteCard = document.createElement('div');
+        noteCard.className = `note-card ${note.color}`;
+        noteCard.dataset.id = note.id;
+        
+        const formattedDate = new Date(note.createdAt).toLocaleDateString('pt-BR');
+        const reminderHtml = note.reminder ? `<div class="note-reminder">🔔 ${new Date(note.reminder).toLocaleString('pt-BR')}</div>` : '';
+        
+        // Verificar se o conteúdo é longo o suficiente para precisar de preview
+        const isLongContent = note.content.length > 100;
+        const contentPreview = isLongContent ? note.content.substring(0, 100) + '...' : note.content;
+        
+        const expandButton = isLongContent ? `<button class="note-expand-btn" onclick="event.stopPropagation(); toggleNoteContent(this)">📖 Ver mais</button>` : '';
+        
+        noteCard.innerHTML = `
+            <div class="note-title">${note.title}</div>
+            <div class="note-content" style="display: ${isLongContent ? 'none' : 'block'};">${note.content.replace(/\n/g, '<br>')}</div>
+            ${isLongContent ? `<div class="note-content-preview">${contentPreview.replace(/\n/g, '<br>')}</div>` : ''}
+            <div class="note-footer">
+                <div class="note-date">${formattedDate}</div>
+                ${reminderHtml}
+            </div>
+            <div class="note-actions">
+                ${expandButton}
+                <button class="note-delete-btn" data-note-id="${note.id}">🗑️ Excluir</button>
+            </div>
+        `;
+        
+        return noteCard;
+    }
+    
+    // Abrir modal de nota
+    function openNoteModal(noteId = null) {
+        currentNoteId = noteId;
+        
+        if (noteId) {
+            // Editar nota existente
+            const note = allNotes.find(n => n.id === noteId);
+            if (note) {
+                noteModalTitle.textContent = 'Editar Nota';
+                noteTitle.value = note.title;
+                noteContent.value = note.content;
+                noteReminder.value = note.reminder ? new Date(note.reminder).toISOString().slice(0, 16) : '';
+                selectNoteColor(note.color);
+                deleteNoteBtn.style.display = 'inline-block';
+            }
+        } else {
+            // Nova nota
+            noteModalTitle.textContent = 'Nova Nota';
+            noteForm.reset();
+            selectNoteColor('yellow');
+            deleteNoteBtn.style.display = 'none';
+        }
+        
+        noteModal.style.display = 'flex';
+        noteTitle.focus();
+    }
+    
+    // Tornar openNoteModal acessível globalmente
+    window.openNoteModal = openNoteModal;
+    
+    // Fechar modal de nota
+    function closeNoteModal() {
+        noteModal.style.display = 'none';
+        currentNoteId = null;
+        noteForm.reset();
+        selectNoteColor('yellow');
+    }
+    
+    // Editar nota - removida para escopo global
+    
+    // Salvar nota
+    async function saveNote() {
+        const title = noteTitle.value.trim();
+        const content = noteContent.value.trim();
+        const reminder = noteReminder.value;
+        
+        if (!title) {
+            showAlert('error', 'Título é obrigatório');
+            return;
+        }
+        
+        try {
+            let note;
+            
+            if (currentNoteId) {
+                // Editar nota existente
+                const query = new Parse.Query(Note);
+                note = await query.get(currentNoteId);
+            } else {
+                // Criar nova nota
+                note = new Note();
+            }
+            
+            note.set('title', title);
+            note.set('content', content);
+            note.set('color', selectedNoteColor);
+            if (reminder) {
+                note.set('reminder', new Date(reminder));
+            } else {
+                note.unset('reminder');
+            }
+            
+            await note.save();
+            
+            const isNewNote = !currentNoteId;
+            
+            if (isNewNote) {
+                // Para nova nota, recarregar todas as notas
+                loadNotes();
+            } else {
+                // Para nota editada, atualizar localmente
+                const noteIndex = allNotes.findIndex(n => n.id === currentNoteId);
+                if (noteIndex !== -1) {
+                    allNotes[noteIndex] = {
+                        id: note.id,
+                        title: note.get('title'),
+                        content: note.get('content'),
+                        color: note.get('color') || 'yellow',
+                        reminder: note.get('reminder'),
+                        createdAt: note.get('createdAt'),
+                        updatedAt: note.get('updatedAt')
+                    };
+                    applyNoteFilters();
+                }
+            }
+            
+            showAlert('success', currentNoteId ? 'Nota atualizada com sucesso!' : 'Nota criada com sucesso!');
+            closeNoteModal();
+        } catch (error) {
+            console.error('Erro ao salvar nota:', error);
+            showAlert('error', 'Erro ao salvar nota');
+        }
+    }
+    
+    // Tornar saveNote acessível globalmente
+    window.saveNote = saveNote;
+    
+    // Excluir nota
+    async function deleteNote(noteId = null) {
+        const idToDelete = noteId || currentNoteId;
+        if (!idToDelete) return;
+        
+        if (!confirm('Tem certeza que deseja excluir esta nota?')) return;
+        
+        try {
+            const query = new Parse.Query(Note);
+            const note = await query.get(idToDelete);
+            
+            await note.destroy();
+            
+            // Remover nota localmente em vez de recarregar todas
+            allNotes = allNotes.filter(n => n.id !== idToDelete);
+            applyNoteFilters();
+            
+            showAlert('success', 'Nota excluída com sucesso!');
+            
+            // Fechar modal apenas se estivermos excluindo a nota atual do modal
+            if (noteId === currentNoteId || !noteId) {
+                closeNoteModal();
+            }
+        } catch (error) {
+            console.error('Erro ao excluir nota:', error);
+            showAlert('error', 'Erro ao excluir nota');
+        }
+    }
+    
+    // Tornar deleteNote acessível globalmente
+    window.deleteNote = deleteNote;
+    
+    // Selecionar cor da nota
+    function selectNoteColor(color) {
+        selectedNoteColor = color;
+        
+        // Remover seleção anterior
+        colorOptions.forEach(option => option.classList.remove('active'));
+        
+        // Adicionar seleção à cor escolhida
+        const selectedOption = document.querySelector(`[data-color="${color}"]`);
+        if (selectedOption) {
+            selectedOption.classList.add('active');
+        }
+    }
+    
+    // Buscar notas
+    function handleNoteSearch() {
+        currentNoteSearch = noteSearchInput.value.trim();
+        applyNoteFilters();
+        
+        // Mostrar/ocultar botão de limpar busca
+        if (clearNoteSearch) {
+            clearNoteSearch.style.display = currentNoteSearch ? 'block' : 'none';
+        }
+    }
+    
+    // Limpar busca de notas
+    function clearNoteSearchInput() {
+        noteSearchInput.value = '';
+        currentNoteSearch = '';
+        applyNoteFilters();
+        if (clearNoteSearch) {
+            clearNoteSearch.style.display = 'none';
+        }
+    }
+    
+    // Filtrar notas por cor
+    function handleNoteFilters() {
+        currentNoteColorFilter = noteColorFilter.value;
+        applyNoteFilters();
+    }
+    
+    // Ordenar notas
+    function handleNoteSort() {
+        currentNoteSort = noteSortSelect.value;
+        applyNoteFilters();
+    }
+    
+    // Alternar visualização das notas
+    function toggleNotesView() {
+        notesViewMode = notesViewMode === 'grid' ? 'list' : 'grid';
+        
+        if (notesContainer) {
+            notesContainer.className = `notes-container ${notesViewMode}-view`;
+        }
+        
+        // Atualizar ícone do botão
+        if (notesViewToggle) {
+            notesViewToggle.innerHTML = notesViewMode === 'grid' ? '📋' : '⊞';
+            notesViewToggle.title = notesViewMode === 'grid' ? 'Visualização em lista' : 'Visualização em grade';
+        }
+    }
+    
+    // ===== FIM DAS FUNÇÕES DE NOTAS =====
+    
     // Inicializar com a aba de tarefas ativa
     switchTab('tasks');
     
     // Carregar tarefas inicialmente
     loadTasks();
 });
+
+// Função global para alternar conteúdo da nota
+function toggleNoteContent(button) {
+    const noteCard = button.closest('.note-card');
+    const fullContent = noteCard.querySelector('.note-content');
+    const preview = noteCard.querySelector('.note-content-preview');
+    const expandBtn = noteCard.querySelector('.note-expand-btn');
+    
+    if (fullContent.style.display === 'none') {
+        // Mostrar conteúdo completo
+        fullContent.style.display = 'block';
+        preview.style.display = 'none';
+        expandBtn.innerHTML = '📖 Ver menos';
+    } else {
+        // Mostrar preview
+        fullContent.style.display = 'none';
+        preview.style.display = 'block';
+        expandBtn.innerHTML = '📖 Ver mais';
+    }
+}
+
+
+
+// Função editNote no escopo global
+function editNote(noteId) {
+    // Acessar elementos DOM diretamente
+    const noteModal = document.getElementById('noteModal');
+    const noteModalTitle = document.getElementById('noteModalTitle');
+    const noteTitle = document.getElementById('noteTitle');
+    const noteContent = document.getElementById('noteContent');
+    const noteReminder = document.getElementById('noteReminder');
+    const deleteNoteBtn = document.getElementById('deleteNoteBtn');
+    const noteForm = document.getElementById('noteForm');
+    
+    if (!noteModal) return;
+    
+    // Buscar a nota nos dados armazenados localmente (allNotes) ou no Parse
+    // Primeiro tentar encontrar na variável global allNotes se existir
+    let note = null;
+    if (typeof allNotes !== 'undefined' && allNotes.length > 0) {
+        note = allNotes.find(n => n.id === noteId);
+    }
+    
+    if (note) {
+        // Editar nota existente
+        noteModalTitle.textContent = 'Editar Nota';
+        noteTitle.value = note.title;
+        noteContent.value = note.content;
+        noteReminder.value = note.reminder ? new Date(note.reminder).toISOString().slice(0, 16) : '';
+        
+        // Atualizar a variável selectedNoteColor
+        if (typeof selectedNoteColor !== 'undefined') {
+            selectedNoteColor = note.color;
+        }
+        
+        // Selecionar cor da nota
+        document.querySelectorAll('.color-option').forEach(option => {
+            option.classList.remove('active');
+            if (option.dataset.color === note.color) {
+                option.classList.add('active');
+            }
+        });
+        
+        deleteNoteBtn.style.display = 'inline-block';
+        
+        // Definir ID da nota atual
+        document.getElementById('editNoteId').value = noteId;
+    }
+    
+    noteModal.style.display = 'flex';
+    noteTitle.focus();
+}

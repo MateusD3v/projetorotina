@@ -23,6 +23,9 @@
                 <button class="tab-btn" id="imagesTabBtn" data-tab="images">
                     <i class="fas fa-images"></i> Imagens
                 </button>
+                <button class="tab-btn" id="notesTabBtn" data-tab="notes">
+                    <i class="fas fa-sticky-note"></i> Notas
+                </button>
             </div>
         </header>
         
@@ -152,6 +155,54 @@
                         </button>
                     </div>
                 </div>
+            </div>
+        </div>
+        
+        <!-- Aba de Notas -->
+        <div class="tab-content" id="notesTab">
+            <button class="add-btn top-left" id="addNoteBtn">Criar Nova Nota</button>
+            
+            <!-- Controles de Busca e Filtros -->
+            <div class="notes-controls">
+                <div class="search-container">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="noteSearchInput" placeholder="Buscar notas..." class="search-input">
+                    <button id="clearNoteSearch" class="clear-search" style="display: none;">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                
+                <div class="filter-controls">
+                    <select id="noteColorFilter" class="filter-select">
+                        <option value="">Todas as Cores</option>
+                        <option value="yellow">Amarelo</option>
+                        <option value="orange">Laranja</option>
+                        <option value="red">Vermelho</option>
+                        <option value="pink">Rosa</option>
+                        <option value="purple">Roxo</option>
+                        <option value="blue">Azul</option>
+                        <option value="teal">Verde-azulado</option>
+                        <option value="green">Verde</option>
+                        <option value="brown">Marrom</option>
+                        <option value="gray">Cinza</option>
+                    </select>
+                    
+                    <select id="noteSortSelect" class="sort-select">
+                        <option value="newest">Mais Recentes</option>
+                        <option value="oldest">Mais Antigas</option>
+                        <option value="title">Título A-Z</option>
+                        <option value="color">Por Cor</option>
+                    </select>
+                    
+                    <button id="notesViewToggle" class="view-toggle-btn" title="Alternar visualização">
+                        <i class="fas fa-th"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Container das Notas -->
+            <div class="notes-container" id="notesContainer">
+                <!-- Notas serão carregadas aqui dinamicamente -->
             </div>
         </div>
     </div>
@@ -312,6 +363,59 @@
             <div class="image-actions">
                 <button class="btn btn-danger" id="deleteImageBtn">Excluir Imagem</button>
             </div>
+        </div>
+    </div>
+    
+    <!-- Modal de Nota -->
+    <div class="modal" id="noteModal">
+        <div class="modal-content note-modal-content">
+            <div class="modal-header">
+                <h2 id="noteModalTitle">Nova Nota</h2>
+                <span class="close-btn" id="closeNoteModalBtn">&times;</span>
+            </div>
+            <form id="noteForm">
+                <input type="hidden" id="editNoteId">
+                
+                <!-- Título da nota -->
+                <div class="form-group">
+                    <input type="text" id="noteTitle" placeholder="Título da nota" class="note-title-input">
+                </div>
+                
+                <!-- Conteúdo da nota -->
+                <div class="form-group">
+                    <textarea id="noteContent" placeholder="Escreva sua nota aqui..." class="note-content-textarea"></textarea>
+                </div>
+                
+                <!-- Cores da nota -->
+                <div class="form-group">
+                    <label>Cor da nota:</label>
+                    <div class="color-picker">
+                        <button type="button" class="color-option active" data-color="yellow" style="background-color: #fff475;"></button>
+                        <button type="button" class="color-option" data-color="orange" style="background-color: #ffcc80;"></button>
+                        <button type="button" class="color-option" data-color="red" style="background-color: #f28b82;"></button>
+                        <button type="button" class="color-option" data-color="pink" style="background-color: #fdcfe8;"></button>
+                        <button type="button" class="color-option" data-color="purple" style="background-color: #d7aefb;"></button>
+                        <button type="button" class="color-option" data-color="blue" style="background-color: #aecbfa;"></button>
+                        <button type="button" class="color-option" data-color="teal" style="background-color: #a7ffeb;"></button>
+                        <button type="button" class="color-option" data-color="green" style="background-color: #ccff90;"></button>
+                        <button type="button" class="color-option" data-color="brown" style="background-color: #e6c9a8;"></button>
+                        <button type="button" class="color-option" data-color="gray" style="background-color: #e8eaed;"></button>
+                    </div>
+                </div>
+                
+                <!-- Lembrete -->
+                <div class="form-group">
+                    <label for="noteReminder">Lembrete (opcional):</label>
+                    <input type="datetime-local" id="noteReminder" class="note-reminder-input">
+                </div>
+                
+                <!-- Botões de ação -->
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" id="cancelNoteBtn">Cancelar</button>
+                    <button type="button" class="btn btn-danger" id="deleteNoteBtn" style="display: none;">Excluir</button>
+                    <button type="submit" class="btn btn-primary" id="saveNoteBtn">Salvar</button>
+                </div>
+            </form>
         </div>
     </div>
     
