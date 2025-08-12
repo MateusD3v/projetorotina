@@ -160,7 +160,10 @@
         
         <!-- Aba de Notas -->
         <div class="tab-content" id="notesTab">
-            <button class="add-btn top-left" id="addNoteBtn">Criar Nova Nota</button>
+            <div class="notes-header-buttons">
+                <button class="add-btn" id="addNoteBtn">Criar Nova Nota</button>
+                <button class="add-btn kanban-btn" id="addKanbanBtn">📋 Lista de Cartões</button>
+            </div>
             
             <!-- Controles de Busca e Filtros -->
             <div class="notes-controls">
@@ -203,6 +206,20 @@
             <!-- Container das Notas -->
             <div class="notes-container" id="notesContainer">
                 <!-- Notas serão carregadas aqui dinamicamente -->
+            </div>
+            
+            <!-- Quadro Kanban integrado na aba de notas -->
+            <div class="kanban-board" id="kanbanBoard" style="display: none;">
+                <div class="kanban-header">
+                    <h2>📋 Quadro de Listas</h2>
+                    <div class="kanban-controls">
+                        <button class="btn btn-secondary" id="backToNotesBtn">← Voltar para Notas</button>
+                        <button class="btn btn-primary" id="addKanbanListBtn">+ Nova Lista</button>
+                    </div>
+                </div>
+                <div class="kanban-container" id="kanbanContainer">
+                    <!-- Listas serão carregadas aqui dinamicamente -->
+                </div>
             </div>
         </div>
     </div>
@@ -419,14 +436,109 @@
         </div>
     </div>
     
+    <!-- Modal de Lista Kanban -->
+    <div class="modal" id="kanbanModal">
+        <div class="modal-content kanban-modal-content">
+            <div class="modal-header">
+                <h2 id="kanbanModalTitle">Nova Lista de Cartões</h2>
+                <span class="close-btn" id="closeKanbanModalBtn">&times;</span>
+            </div>
+            <form id="kanbanForm">
+                <input type="hidden" id="editKanbanId">
+                
+                <!-- Nome da lista -->
+                <div class="form-group">
+                    <input type="text" id="kanbanListName" placeholder="Nome da lista (ex: Agosto, Pendentes, Em Progresso...)" class="kanban-list-input" required>
+                </div>
+                
+                <!-- Descrição da lista -->
+                <div class="form-group">
+                    <textarea id="kanbanListDescription" placeholder="Descrição da lista (opcional)" class="kanban-description-textarea"></textarea>
+                </div>
+                
+                <!-- Cor da lista -->
+                <div class="form-group">
+                    <label>Cor da lista:</label>
+                    <div class="color-picker">
+                        <button type="button" class="color-option active" data-color="blue" style="background-color: #4285f4;"></button>
+                        <button type="button" class="color-option" data-color="green" style="background-color: #34a853;"></button>
+                        <button type="button" class="color-option" data-color="orange" style="background-color: #ff9800;"></button>
+                        <button type="button" class="color-option" data-color="red" style="background-color: #ea4335;"></button>
+                        <button type="button" class="color-option" data-color="purple" style="background-color: #9c27b0;"></button>
+                        <button type="button" class="color-option" data-color="teal" style="background-color: #009688;"></button>
+                        <button type="button" class="color-option" data-color="gray" style="background-color: #757575;"></button>
+                    </div>
+                </div>
+                
+                <!-- Botões de ação -->
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" id="cancelKanbanBtn">Cancelar</button>
+                    <button type="button" class="btn btn-danger" id="deleteKanbanBtn" style="display: none;">Excluir Lista</button>
+                    <button type="submit" class="btn btn-primary" id="saveKanbanBtn">Criar Lista</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Modal de Cartão -->
+    <div class="modal" id="cardModal">
+        <div class="modal-content card-modal-content">
+            <div class="modal-header">
+                <h2 id="cardModalTitle">Novo Cartão</h2>
+                <span class="close-btn" id="closeCardModalBtn">&times;</span>
+            </div>
+            <form id="cardForm">
+                <input type="hidden" id="editCardId">
+                <input type="hidden" id="cardListId">
+                
+                <!-- Título do cartão -->
+                <div class="form-group">
+                    <input type="text" id="cardTitle" placeholder="Título do cartão" class="card-title-input" required>
+                </div>
+                
+                <!-- Descrição do cartão -->
+                <div class="form-group">
+                    <textarea id="cardDescription" placeholder="Descrição do cartão (opcional)" class="card-description-textarea"></textarea>
+                </div>
+                
+                <!-- Prioridade do cartão -->
+                <div class="form-group">
+                    <label>Prioridade:</label>
+                    <select id="cardPriority" class="card-priority-select">
+                        <option value="baixa">Baixa</option>
+                        <option value="media" selected>Média</option>
+                        <option value="alta">Alta</option>
+                    </select>
+                </div>
+                
+                <!-- Data de vencimento -->
+                <div class="form-group">
+                    <label for="cardDueDate">Data de vencimento (opcional):</label>
+                    <input type="datetime-local" id="cardDueDate" class="card-due-date-input">
+                </div>
+                
+                <!-- Botões de ação -->
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" id="cancelCardBtn">Cancelar</button>
+                    <button type="button" class="btn btn-danger" id="deleteCardBtn" style="display: none;">Excluir Cartão</button>
+                    <button type="submit" class="btn btn-primary" id="saveCardBtn">Salvar Cartão</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Quadro Kanban -->
+
+    
     <!-- Parse SDK -->
     <script src="https://npmcdn.com/parse@5.3.0/dist/parse.min.js"></script>
     <!-- Google Identity Services (GIS) - Nova API -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script src="https://apis.google.com/js/api.js" async defer></script>
-    <!-- Google Calendar Integration -->
+    <!-- Google Calendar Integration Simplificada -->
     <script src="js/google-calendar-config.js"></script>
-    <script src="js/google-calendar.js"></script>
+    <script src="js/google-calendar-simple.js"></script>
+    <script src="js/kanban.js"></script>
     <script src="js/script.js"></script>
 </body>
 </html>

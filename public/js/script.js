@@ -200,7 +200,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Inicializa Google Calendar quando a página carrega (com delay para aguardar API)
     setTimeout(() => {
-        initializeGoogleCalendar();
+        initializeSimpleGoogleCalendar();
     }, 1000);
     
 
@@ -1719,44 +1719,39 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 3000);
     }
     
-    // Funções do Google Calendar
-    async function initializeGoogleCalendar() {
+    // Funções do Google Calendar Simplificado
+    async function initializeSimpleGoogleCalendar() {
         try {
-            // Aguarda o carregamento da API do Google com retry
+            // Aguarda o carregamento da biblioteca Google Identity Services
             let retries = 0;
             const maxRetries = 10;
             
-            while (typeof gapi === 'undefined' && retries < maxRetries) {
+            while (typeof google === 'undefined' && retries < maxRetries) {
                 await new Promise(resolve => setTimeout(resolve, 500));
                 retries++;
             }
             
-            if (typeof gapi === 'undefined') {
-                updateCalendarStatus('API não carregada');
+            if (typeof google === 'undefined') {
+                updateCalendarStatus('Google Identity Services não carregada');
                 return;
             }
             
-            if (typeof GoogleCalendarIntegration !== 'undefined') {
-                googleCalendarIntegration = new GoogleCalendarIntegration();
+            if (typeof SimpleGoogleCalendarIntegration !== 'undefined') {
+                googleCalendarIntegration = new SimpleGoogleCalendarIntegration();
                 
-                // Verifica se as credenciais estão configuradas
+                // Verifica se o Client ID está configurado
                 if (!googleCalendarIntegration.areCredentialsConfigured()) {
-                    updateCalendarStatus('⚠️ Credenciais não configuradas - Clique para instruções');
+                    updateCalendarStatus('⚠️ Client ID não configurado - Clique para instruções');
                     return;
                 }
                 
-                const success = await googleCalendarIntegration.initialize();
-                if (success) {
-                    console.log('Google Calendar integração inicializada com sucesso');
-                } else {
-                    console.log('Falha ao inicializar Google Calendar');
-                }
+                console.log('Google Calendar integração simplificada inicializada');
                 updateCalendarStatus();
             } else {
-                updateCalendarStatus('Classe não carregada');
+                updateCalendarStatus('Classe SimpleGoogleCalendarIntegration não carregada');
             }
         } catch (error) {
-            console.error('Erro ao inicializar Google Calendar:', error);
+            console.error('Erro ao inicializar Google Calendar Simplificado:', error);
             updateCalendarStatus('Erro na inicialização');
         }
     }
@@ -1776,14 +1771,23 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         
-        if (googleCalendarIntegration && googleCalendarIntegration.isSignedIn) {
-            statusElement.textContent = 'Conectado ✓';
-            statusElement.className = 'calendar-status connected';
-            buttonElement.textContent = '🚪 Desconectar';
-            buttonElement.style.backgroundColor = '#e74c3c';
-            buttonElement.style.color = 'white';
+        if (googleCalendarIntegration) {
+            // Usa o método getStatusText() da nova classe
+            statusElement.textContent = googleCalendarIntegration.getStatusText();
+            
+            if (googleCalendarIntegration.isSignedIn) {
+                statusElement.className = 'calendar-status connected';
+                buttonElement.textContent = '🚪 Desconectar';
+                buttonElement.style.backgroundColor = '#e74c3c';
+                buttonElement.style.color = 'white';
+            } else {
+                statusElement.className = 'calendar-status';
+                buttonElement.textContent = '📅 Conectar Google Calendar';
+                buttonElement.style.backgroundColor = '#4285f4';
+                buttonElement.style.color = 'white';
+            }
         } else {
-            statusElement.textContent = 'Não conectado';
+            statusElement.textContent = 'Carregando...';
             statusElement.className = 'calendar-status';
             buttonElement.textContent = '📅 Conectar Google Calendar';
             buttonElement.style.backgroundColor = '#4285f4';
@@ -1799,26 +1803,18 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Verifica se as credenciais estão configuradas
         if (!googleCalendarIntegration.areCredentialsConfigured()) {
-            alert('⚠️ Credenciais do Google Calendar não configuradas!\n\n' +
-                  'Para usar a integração com Google Calendar, você precisa:\n\n' +
+            alert('⚠️ Client ID do Google Calendar não configurado!\n\n' +
+                  'Para usar a integração simplificada com Google Calendar, você precisa:\n\n' +
                   '1. Configurar um projeto no Google Cloud Console\n' +
-                  '2. Obter CLIENT_ID e API_KEY\n' +
-                  '3. Configurar as credenciais no arquivo google-calendar-config.js\n\n' +
-                  'Consulte o arquivo GOOGLE_CALENDAR_SETUP.md para instruções detalhadas.');
+                  '2. Ativar a API do Google Calendar\n' +
+                  '3. Criar um Client ID OAuth 2.0\n' +
+                  '4. Configurar o Client ID no arquivo google-calendar-config.js\n\n' +
+                  'Após isso, os usuários poderão fazer login apenas com sua conta Google!');
             return;
         }
         
         try {
-            // Verifica se a API foi inicializada, se não, tenta inicializar
-            if (!googleCalendarIntegration.gapi) {
-                console.log('API não inicializada, tentando inicializar...');
-                const success = await googleCalendarIntegration.initialize();
-                if (!success) {
-                    alert('Erro ao inicializar Google Calendar. Verifique suas credenciais.');
-                    return;
-                }
-            }
-            
+            // Para a versão simplificada, apenas alterna entre login/logout
             if (googleCalendarIntegration.isSignedIn) {
                 await googleCalendarIntegration.signOut();
             } else {
