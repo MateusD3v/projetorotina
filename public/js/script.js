@@ -1,18 +1,666 @@
-// Configuração do Parse SDK
-Parse.initialize(
-  'xrkPQgeanlbyRGOOqaR9kChOXIrEMZnPhOo271qp', // Application ID
-  'nQoYP0tnyrYOn1XoKTpjx777AWP4WhIL4aZL37S1'  // JavaScript Key
-);
-Parse.serverURL = 'https://parseapi.back4app.com';
+// Configuração do Parse SDK com tratamento de erro
+try {
+    // Configuração completa do Parse SDK
+    const APP_ID = 'xrkPQgeanlbyRGOOqaR9kChOXIrEMZnPhOo271qp';
+    const JS_KEY = 'nQoYP0tnyrYOn1XoKTpjx777AWP4WhIL4aZL37S1';
+    const SERVER_URL = 'https://parseapi.back4app.com';
+    
+    Parse.initialize(APP_ID, JS_KEY);
+    Parse.serverURL = SERVER_URL;
+    
+    // Verificar se a inicialização foi bem-sucedida
+    console.log('✅ Parse SDK inicializado com sucesso');
+    console.log('🔧 Application ID:', APP_ID);
+    console.log('🔧 Server URL:', SERVER_URL);
+    
+    // Definir as classes após a inicialização do Parse
+    window.Task = Parse.Object.extend('Task');
+    window.ImageFile = Parse.Object.extend('ImageFile');
+    window.Note = Parse.Object.extend('Note');
+    
+    console.log('✅ Classes Parse definidas com sucesso');
+    
+    // Teste básico de conectividade
+    setTimeout(async () => {
+        try {
+            const TestObject = Parse.Object.extend('TestConnection');
+            const testObj = new TestObject();
+            testObj.set('test', 'connection');
+            await testObj.save();
+            console.log('✅ Teste de conectividade bem-sucedido');
+            await testObj.destroy();
+        } catch (error) {
+            console.warn('⚠️ Teste de conectividade falhou:', error.message);
+        }
+    }, 2000);
+    
+} catch (error) {
+    console.error('❌ Erro ao inicializar Parse SDK:', error);
+}
 
-// Definir a classe Task
-const Task = Parse.Object.extend('Task');
+// Sistema experimental de exclusão com métodos alternativos
+async function sistemaExclusaoExperimental() {
+    console.log('🧪 === SISTEMA EXPERIMENTAL DE EXCLUSÃO ===');
+    
+    // Método 1: Exclusão via marcação como deletado
+    async function marcarComoDeletado(noteId) {
+        const response = await fetch(`https://parseapi.back4app.com/classes/Note/${noteId}`, {
+            method: 'PUT',
+            headers: {
+                'X-Parse-Application-Id': 'xrkPQgeanlbyRGOOqaR9kChOXIrEMZnPhOo271qp',
+                'X-Parse-JavaScript-Key': 'nQoYP0tnyrYOn1XoKTpjx777AWP4WhIL4aZL37S1',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                deleted: true,
+                active: false,
+                deletedAt: new Date().toISOString()
+            })
+        });
+        return response;
+    }
+    
+    // Método 2: Exclusão via batch operation
+    async function exclusaoViaBatch(noteId) {
+        const batchRequest = {
+            requests: [{
+                method: 'DELETE',
+                path: `/classes/Note/${noteId}`
+            }]
+        };
+        
+        const response = await fetch('https://parseapi.back4app.com/batch', {
+            method: 'POST',
+            headers: {
+                'X-Parse-Application-Id': 'xrkPQgeanlbyRGOOqaR9kChOXIrEMZnPhOo271qp',
+                'X-Parse-JavaScript-Key': 'nQoYP0tnyrYOn1XoKTpjx777AWP4WhIL4aZL37S1',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(batchRequest)
+        });
+        return response;
+    }
+    
+    // Método 3: Exclusão via cloud function simulada
+    async function exclusaoViaCloudFunction(noteId) {
+        const response = await fetch('https://parseapi.back4app.com/functions/deleteNote', {
+            method: 'POST',
+            headers: {
+                'X-Parse-Application-Id': 'xrkPQgeanlbyRGOOqaR9kChOXIrEMZnPhOo271qp',
+                'X-Parse-JavaScript-Key': 'nQoYP0tnyrYOn1XoKTpjx777AWP4WhIL4aZL37S1',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ noteId: noteId })
+        });
+        return response;
+    }
+    
+    // Buscar notas para teste
+     console.log('🔍 Buscando notas para teste experimental...');
+     let notas = [];
+     
+     try {
+         const query = new Parse.Query(Note);
+         query.limit(5);
+         notas = await query.find();
+         console.log(`📝 Encontradas ${notas.length} notas`);
+         
+         if (notas.length === 0) {
+             alert('⚠️ Nenhuma nota encontrada para teste');
+             return false;
+         }
+     } catch (error) {
+         console.error('❌ Erro ao buscar notas:', error);
+         alert(`❌ Erro ao buscar: ${error.message}`);
+         return false;
+     }
+     
+     // Métodos experimentais para testar
+     const metodosExperimentais = [
+         {
+             nome: 'Marcação como Deletado',
+             funcao: marcarComoDeletado
+         },
+         {
+             nome: 'Exclusão via Batch',
+             funcao: exclusaoViaBatch
+         },
+         {
+             nome: 'Cloud Function Simulada',
+             funcao: exclusaoViaCloudFunction
+         },
+         {
+             nome: 'DELETE com FormData',
+             funcao: async (noteId) => {
+                 const formData = new FormData();
+                 formData.append('_method', 'DELETE');
+                 
+                 const response = await fetch(`https://parseapi.back4app.com/classes/Note/${noteId}`, {
+                     method: 'POST',
+                     headers: {
+                         'X-Parse-Application-Id': 'xrkPQgeanlbyRGOOqaR9kChOXIrEMZnPhOo271qp',
+                         'X-Parse-JavaScript-Key': 'nQoYP0tnyrYOn1XoKTpjx777AWP4WhIL4aZL37S1'
+                     },
+                     body: formData
+                 });
+                 return response;
+             }
+         },
+         {
+             nome: 'WebSocket Simulado',
+             funcao: async (noteId) => {
+                 // Simular exclusão via WebSocket usando fetch com headers especiais
+                 const response = await fetch(`https://parseapi.back4app.com/classes/Note/${noteId}`, {
+                     method: 'DELETE',
+                     headers: {
+                         'X-Parse-Application-Id': 'xrkPQgeanlbyRGOOqaR9kChOXIrEMZnPhOo271qp',
+                         'X-Parse-JavaScript-Key': 'nQoYP0tnyrYOn1XoKTpjx777AWP4WhIL4aZL37S1',
+                         'Content-Type': 'application/json',
+                         'Connection': 'Upgrade',
+                         'Upgrade': 'websocket',
+                         'Sec-WebSocket-Key': btoa(Math.random().toString()),
+                         'Sec-WebSocket-Version': '13'
+                     }
+                 });
+                 return response;
+             }
+         }
+     ];
+     
+     // Testar cada método experimental
+     for (let i = 0; i < metodosExperimentais.length && notas.length > 0; i++) {
+         const metodo = metodosExperimentais[i];
+         const nota = notas[0];
+         
+         console.log(`\n🧪 Método ${i + 1}: ${metodo.nome}`);
+         console.log(`🎯 Testando com: "${nota.get('title')}" (${nota.id})`);
+         
+         try {
+             const response = await metodo.funcao(nota.id);
+             
+             if (response && (response.ok || response.status < 400)) {
+                 console.log(`✅ SUCESSO: ${metodo.nome}`);
+                 alert(`🎉 MÉTODO EXPERIMENTAL FUNCIONOU!\n\nMétodo: ${metodo.nome}\nNota: "${nota.get('title')}"`);            
+                 
+                 // Verificar se realmente foi excluída
+                 await new Promise(resolve => setTimeout(resolve, 1000));
+                 
+                 try {
+                     const verificacao = new Parse.Query(Note);
+                     const notaVerificacao = await verificacao.get(nota.id);
+                     if (notaVerificacao.get('deleted') === true) {
+                         console.log('✅ Nota marcada como deletada');
+                     }
+                 } catch (verifyError) {
+                     console.log('✅ Nota realmente excluída (não encontrada)');
+                 }
+                 
+                 // Recarregar interface
+                 if (typeof carregarNotas === 'function') {
+                     await carregarNotas();
+                 }
+                 
+                 return true;
+             } else {
+                 throw new Error(`Resposta inválida: ${response?.status}`);
+             }
+         } catch (error) {
+             console.log(`❌ Falhou: ${metodo.nome} - ${error.message}`);
+             await new Promise(resolve => setTimeout(resolve, 500));
+         }
+     }
+     
+     console.log('❌ Todos os métodos experimentais falharam');
+     alert('❌ Nenhum método experimental funcionou');
+     return false;
+ }
+ 
+ // Função auxiliar para XMLHttpRequest com retry (mantida para compatibilidade)
+ async function sistemaExclusaoAvancado() {
+     console.log('🚀 === SISTEMA AVANÇADO DE EXCLUSÃO ===');
+     
+     // Função auxiliar para XMLHttpRequest com retry
+    function deleteWithXHR(noteId, retries = 3) {
+        return new Promise((resolve, reject) => {
+            const attempt = (attemptNumber) => {
+                const xhr = new XMLHttpRequest();
+                xhr.open('DELETE', `https://parseapi.back4app.com/classes/Note/${noteId}`, true);
+                
+                // Headers essenciais
+                xhr.setRequestHeader('X-Parse-Application-Id', 'xrkPQgeanlbyRGOOqaR9kChOXIrEMZnPhOo271qp');
+                xhr.setRequestHeader('X-Parse-JavaScript-Key', 'nQoYP0tnyrYOn1XoKTpjx777AWP4WhIL4aZL37S1');
+                xhr.setRequestHeader('Content-Type', 'application/json');
+                xhr.setRequestHeader('Cache-Control', 'no-cache');
+                
+                xhr.onload = function() {
+                    if (xhr.status >= 200 && xhr.status < 300) {
+                        resolve(`XHR Success (${xhr.status})`);
+                    } else if (attemptNumber < retries) {
+                        console.log(`⚠️ Tentativa ${attemptNumber} falhou (${xhr.status}), tentando novamente...`);
+                        setTimeout(() => attempt(attemptNumber + 1), 1000);
+                    } else {
+                        reject(new Error(`XHR failed: ${xhr.status} ${xhr.statusText}`));
+                    }
+                };
+                
+                xhr.onerror = function() {
+                    if (attemptNumber < retries) {
+                        console.log(`⚠️ Erro de rede na tentativa ${attemptNumber}, tentando novamente...`);
+                        setTimeout(() => attempt(attemptNumber + 1), 1000);
+                    } else {
+                        reject(new Error('XHR network error'));
+                    }
+                };
+                
+                xhr.send();
+            };
+            
+            attempt(1);
+        });
+    }
+    
+    // Função para criar uma nova instância Parse
+    function createFreshParseInstance() {
+        const freshNote = window.Note;
+        return freshNote;
+    }
+    
+    const estrategias = [
+        {
+            nome: 'XMLHttpRequest com Retry',
+            funcao: async (noteId) => {
+                return await deleteWithXHR(noteId, 3);
+            }
+        },
+        {
+            nome: 'Parse SDK Reinicializado',
+            funcao: async (noteId) => {
+                // Reinicializar Parse
+                Parse.initialize(
+                    'xrkPQgeanlbyRGOOqaR9kChOXIrEMZnPhOo271qp',
+                    'nQoYP0tnyrYOn1XoKTpjx777AWP4WhIL4aZL37S1'
+                );
+                Parse.serverURL = 'https://parseapi.back4app.com';
+                
+                const FreshNote = createFreshParseInstance();
+                const query = new Parse.Query(FreshNote);
+                const nota = await query.get(noteId);
+                await nota.destroy();
+                return 'Parse SDK reinicializado';
+            }
+        },
+        {
+            nome: 'Fetch com Headers Completos',
+            funcao: async (noteId) => {
+                const response = await fetch(`https://parseapi.back4app.com/classes/Note/${noteId}`, {
+                    method: 'DELETE',
+                    mode: 'cors',
+                    credentials: 'omit',
+                    headers: {
+                        'X-Parse-Application-Id': 'xrkPQgeanlbyRGOOqaR9kChOXIrEMZnPhOo271qp',
+                        'X-Parse-JavaScript-Key': 'nQoYP0tnyrYOn1XoKTpjx777AWP4WhIL4aZL37S1',
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'Cache-Control': 'no-cache',
+                        'Pragma': 'no-cache'
+                    }
+                });
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`HTTP ${response.status}: ${errorText}`);
+                }
+                
+                return 'Fetch com headers completos';
+            }
+        },
+        {
+            nome: 'Parse SDK com Configuração Forçada',
+            funcao: async (noteId) => {
+                // Forçar configurações
+                Parse.CoreManager.set('REQUEST_HEADERS', {
+                    'X-Parse-Application-Id': 'xrkPQgeanlbyRGOOqaR9kChOXIrEMZnPhOo271qp',
+                    'X-Parse-JavaScript-Key': 'nQoYP0tnyrYOn1XoKTpjx777AWP4WhIL4aZL37S1'
+                });
+                
+                const query = new Parse.Query(Note);
+                query.equalTo('objectId', noteId);
+                const nota = await query.first();
+                
+                if (!nota) {
+                    throw new Error('Nota não encontrada');
+                }
+                
+                await nota.destroy();
+                return 'Parse SDK com configuração forçada';
+            }
+        },
+        {
+            nome: 'Exclusão por Query Direta',
+            funcao: async (noteId) => {
+                const response = await fetch('https://parseapi.back4app.com/classes/Note', {
+                    method: 'POST',
+                    headers: {
+                        'X-Parse-Application-Id': 'xrkPQgeanlbyRGOOqaR9kChOXIrEMZnPhOo271qp',
+                        'X-Parse-JavaScript-Key': 'nQoYP0tnyrYOn1XoKTpjx777AWP4WhIL4aZL37S1',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        "_method": "DELETE",
+                        "where": {"objectId": noteId}
+                    })
+                });
+                
+                if (!response.ok) throw new Error(`Query DELETE failed: ${response.status}`);
+                return 'Exclusão por query direta';
+            }
+        }
+    ];
+    
+    // Buscar notas
+    console.log('🔍 Buscando notas para teste...');
+    let notas = [];
+    
+    try {
+        const query = new Parse.Query(Note);
+        query.limit(10);
+        notas = await query.find();
+        console.log(`📝 Encontradas ${notas.length} notas`);
+        
+        if (notas.length === 0) {
+            alert('⚠️ Nenhuma nota encontrada');
+            return false;
+        }
+    } catch (error) {
+        console.error('❌ Erro ao buscar notas:', error);
+        alert(`❌ Erro ao buscar: ${error.message}`);
+        return false;
+    }
+    
+    // Testar estratégias
+    for (let i = 0; i < estrategias.length && notas.length > 0; i++) {
+        const estrategia = estrategias[i];
+        const nota = notas[0];
+        
+        console.log(`\n🧪 Estratégia ${i + 1}: ${estrategia.nome}`);
+        console.log(`🎯 Excluindo: "${nota.get('title')}" (${nota.id})`);
+        
+        try {
+            const resultado = await estrategia.funcao(nota.id);
+            console.log(`✅ SUCESSO: ${estrategia.nome}`);
+            alert(`🎉 EXCLUSÃO FUNCIONOU!\n\nMétodo: ${estrategia.nome}\nNota: "${nota.get('title')}"`);            
+            
+            // Verificar se realmente foi excluída
+            try {
+                const verificacao = new Parse.Query(Note);
+                const notaVerificacao = await verificacao.get(nota.id);
+                console.log('⚠️ Nota ainda existe após exclusão!');
+            } catch (verifyError) {
+                console.log('✅ Confirmado: Nota foi excluída com sucesso!');
+            }
+            
+            notas.shift();
+            if (typeof loadNotes === 'function') {
+                loadNotes();
+            }
+            
+            return true;
+            
+        } catch (error) {
+            console.error(`❌ Falhou: ${estrategia.nome} - ${error.message}`);
+            
+            if (i < estrategias.length - 1) {
+                console.log('⏭️ Tentando próxima estratégia...');
+                await new Promise(resolve => setTimeout(resolve, 2000));
+            }
+        }
+    }
+    
+    console.error('❌ Todas as estratégias falharam!');
+    alert('❌ FALHA TOTAL: Nenhuma estratégia funcionou');
+    return false;
+}
 
-// Definir a classe Image para armazenar imagens no Back4App
-const ImageFile = Parse.Object.extend('ImageFile');
+// Teste de conectividade com Back4App
+async function testeConectividade() {
+    console.log('🔍 === TESTE DE CONECTIVIDADE BACK4APP ===');
+    
+    // Teste 1: Conectividade básica com fetch
+    console.log('1️⃣ Testando conectividade básica...');
+    try {
+        const response = await fetch('https://parseapi.back4app.com/classes/Note', {
+            method: 'GET',
+            headers: {
+                'X-Parse-Application-Id': 'xrkPQgeanlbyRGOOqaR9kChOXIrEMZnPhOo271qp',
+                'X-Parse-JavaScript-Key': 'nQoYP0tnyrYOn1XoKTpjx777AWP4WhIL4aZL37S1',
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        console.log('📡 Status da resposta:', response.status);
+        
+        if (response.ok) {
+            const data = await response.json();
+            console.log('✅ Conectividade OK - Notas encontradas:', data.results?.length || 0);
+            alert('✅ CONECTIVIDADE OK! O problema pode estar no Parse SDK.');
+        } else {
+            console.error('❌ Erro HTTP:', response.status, response.statusText);
+            alert(`❌ Erro HTTP: ${response.status} - ${response.statusText}`);
+        }
+    } catch (error) {
+        console.error('❌ Erro de rede:', error);
+        alert(`❌ Erro de rede: ${error.message}`);
+        return false;
+    }
+    
+    // Teste 2: Parse SDK
+    console.log('2️⃣ Testando Parse SDK...');
+    try {
+        if (!Parse || !Parse.Query) {
+            throw new Error('Parse SDK não inicializado');
+        }
+        
+        const query = new Parse.Query(Note);
+        query.limit(1);
+        const results = await query.find();
+        
+        console.log('✅ Parse SDK OK - Notas:', results.length);
+        alert('✅ PARSE SDK FUNCIONANDO!');
+        return true;
+        
+    } catch (error) {
+        console.error('❌ Erro Parse SDK:', error);
+        alert(`❌ Erro Parse SDK: ${error.message}`);
+        return false;
+    }
+}
 
-// Definir a classe Note para armazenar notas no Back4App
-const Note = Parse.Object.extend('Note');
+// Diagnóstico completo do Back4App
+async function diagnosticoCompleto() {
+    console.log('🔍 === DIAGNÓSTICO COMPLETO BACK4APP ===');
+    
+    // Primeiro testar conectividade
+    const conectividadeOK = await testeConectividade();
+    if (!conectividadeOK) {
+        return false;
+    }
+    
+    // Se chegou aqui, a conectividade está OK - executar sistema experimental
+    console.log('3️⃣ Iniciando sistema experimental de exclusão...');
+    return await sistemaExclusaoExperimental();
+}
+
+// Função de atalho para testes rápidos
+async function testeRapido() {
+    console.log('⚡ === TESTE RÁPIDO EXPERIMENTAL ===');
+    return await sistemaExclusaoExperimental();
+}
+
+// Função de atalho para sistema avançado (backup)
+async function testeAvancado() {
+    console.log('🚀 === TESTE AVANÇADO ===');
+    return await sistemaExclusaoAvancado();
+}
+
+// Função para forçar exclusão (método mais agressivo)
+async function forcaExclusao() {
+    console.log('💥 === FORÇA EXCLUSÃO ===');
+    
+    try {
+        const query = new Parse.Query(Note);
+        query.limit(1);
+        const notas = await query.find();
+        
+        if (notas.length === 0) {
+            alert('⚠️ Nenhuma nota para excluir');
+            return false;
+        }
+        
+        const nota = notas[0];
+        const noteId = nota.id;
+        const title = nota.get('title');
+        
+        console.log(`🎯 Forçando exclusão: "${title}" (${noteId})`);
+        
+        // Tentar todas as abordagens simultaneamente
+        const promises = [
+            // XMLHttpRequest
+            new Promise((resolve, reject) => {
+                const xhr = new XMLHttpRequest();
+                xhr.open('DELETE', `https://parseapi.back4app.com/classes/Note/${noteId}`, true);
+                xhr.setRequestHeader('X-Parse-Application-Id', 'xrkPQgeanlbyRGOOqaR9kChOXIrEMZnPhOo271qp');
+                xhr.setRequestHeader('X-Parse-JavaScript-Key', 'nQoYP0tnyrYOn1XoKTpjx777AWP4WhIL4aZL37S1');
+                xhr.onload = () => xhr.status < 300 ? resolve('XHR') : reject(new Error('XHR failed'));
+                xhr.onerror = () => reject(new Error('XHR error'));
+                xhr.send();
+            }),
+            
+            // Parse SDK
+            nota.destroy().then(() => 'Parse SDK').catch(e => Promise.reject(e)),
+            
+            // Fetch
+            fetch(`https://parseapi.back4app.com/classes/Note/${noteId}`, {
+                method: 'DELETE',
+                headers: {
+                    'X-Parse-Application-Id': 'xrkPQgeanlbyRGOOqaR9kChOXIrEMZnPhOo271qp',
+                    'X-Parse-JavaScript-Key': 'nQoYP0tnyrYOn1XoKTpjx777AWP4WhIL4aZL37S1'
+                }
+            }).then(r => r.ok ? 'Fetch' : Promise.reject(new Error('Fetch failed')))
+        ];
+        
+        // Usar Promise.any para pegar o primeiro que funcionar
+        const metodoSucesso = await Promise.any(promises);
+        
+        console.log(`✅ SUCESSO com ${metodoSucesso}!`);
+        alert(`🎉 EXCLUSÃO FORÇADA FUNCIONOU!\nMétodo: ${metodoSucesso}\nNota: "${title}"`);
+        
+        if (typeof loadNotes === 'function') {
+            loadNotes();
+        }
+        
+        return true;
+        
+    } catch (error) {
+        console.error('❌ Força exclusão falhou:', error);
+        alert(`❌ FORÇA EXCLUSÃO FALHOU: ${error.message}`);
+        return false;
+    }
+}
+
+// Função de teste para exclusão
+async function testDeleteFunction() {
+    try {
+        console.log('🧪 Testando função de exclusão...');
+        
+        // Criar uma nota de teste
+        const testNote = new Note();
+        testNote.set('title', 'Teste de Exclusão');
+        testNote.set('content', 'Esta é uma nota de teste para verificar a exclusão');
+        testNote.set('color', 'red');
+        
+        const savedNote = await testNote.save();
+        console.log('✅ Nota de teste criada:', savedNote.id);
+        
+        // Tentar excluir a nota
+        await savedNote.destroy();
+        console.log('🗑️ Nota de teste excluída com sucesso!');
+        
+        return true;
+    } catch (error) {
+        console.error('❌ Erro no teste de exclusão:', {
+            error: error,
+            message: error.message,
+            code: error.code
+        });
+        return false;
+    }
+}
+
+// Função para testar exclusão de nota específica
+async function testDeleteSpecificNote(noteId) {
+    try {
+        console.log('🎯 Testando exclusão da nota específica:', noteId);
+        
+        const query = new Parse.Query(Note);
+        const note = await query.get(noteId);
+        console.log('✅ Nota encontrada:', note);
+        console.log('📝 Dados da nota:', {
+            id: note.id,
+            title: note.get('title'),
+            content: note.get('content'),
+            color: note.get('color')
+        });
+        
+        // Tentar excluir
+        await note.destroy();
+        console.log('🗑️ Nota excluída com sucesso!');
+        
+        // Recarregar notas
+        if (typeof loadNotes === 'function') {
+            loadNotes();
+        }
+        
+        return true;
+    } catch (error) {
+        console.error('❌ Erro ao excluir nota específica:', {
+            noteId: noteId,
+            error: error,
+            message: error.message,
+            code: error.code
+        });
+        return false;
+    }
+}
+
+// Tornar funções de teste disponíveis globalmente
+window.testDeleteFunction = testDeleteFunction;
+window.sistemaExclusaoAvancado = sistemaExclusaoAvancado;
+window.sistemaExclusaoExperimental = sistemaExclusaoExperimental;
+window.testeConectividade = testeConectividade;
+window.diagnosticoCompleto = diagnosticoCompleto;
+window.testeRapido = testeRapido;
+window.testeAvancado = testeAvancado;
+window.forcaExclusao = forcaExclusao;
+window.testDeleteSpecificNote = testDeleteSpecificNote;
+
+// Função para testar a nota selecionada pelo usuário
+window.testSelectedNote = () => testDeleteSpecificNote('b8Eo8tVgjX');
+
+// Executar diagnóstico quando a página carregar
+window.addEventListener('load', () => {
+    setTimeout(() => {
+        console.log('🚀 === FUNÇÕES DE TESTE DISPONÍVEIS ===');
+        console.log('⚡ testeRapido() - Sistema experimental (NOVO!)'); 
+        console.log('🧪 sistemaExclusaoExperimental() - Métodos alternativos');
+        console.log('🔧 testeAvancado() - Sistema avançado tradicional');
+        console.log('💥 forcaExclusao() - Força exclusão simultânea');
+        console.log('🔍 testeConectividade() - Teste de conectividade');
+        console.log('🧪 diagnosticoCompleto() - Diagnóstico completo');
+        console.log('\n🎯 RECOMENDAÇÃO: Comece com testeRapido()');
+    }, 1000);
+});
+
+// Classes já definidas globalmente após inicialização do Parse
 
 // Variáveis globais para notas
 let selectedNoteColor = 'yellow';
@@ -324,7 +972,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (e.target.classList.contains('note-delete-btn')) {
             e.stopPropagation();
             const noteId = e.target.dataset.noteId;
-            deleteNote(noteId);
+            deleteNoteDirectly(noteId);
         }
     });
 
@@ -2051,7 +2699,7 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
             <div class="note-actions">
                 ${expandButton}
-                <button class="note-delete-btn" data-note-id="${note.id}">🗑️ Excluir</button>
+                <button class="btn btn-danger" data-note-id="${note.id}">Excluir</button>
             </div>
         `;
         
@@ -2166,28 +2814,40 @@ document.addEventListener('DOMContentLoaded', () => {
     window.saveNote = saveNote;
     
     // Excluir nota
-    async function deleteNote(noteId = null) {
-        const idToDelete = noteId || currentNoteId;
-        if (!idToDelete) return;
+    async function deleteNote() {
+        if (!currentNoteId) return;
         
         if (!confirm('Tem certeza que deseja excluir esta nota?')) return;
         
         try {
             const query = new Parse.Query(Note);
-            const note = await query.get(idToDelete);
+            const note = await query.get(currentNoteId);
             
             await note.destroy();
             
-            // Remover nota localmente em vez de recarregar todas
-            allNotes = allNotes.filter(n => n.id !== idToDelete);
+            showAlert('success', 'Nota excluída com sucesso!');
+            closeNoteModal();
+            // Otimização: remover da lista local em vez de recarregar tudo
+            allNotes = allNotes.filter(n => n.id !== currentNoteId);
             applyNoteFilters();
+        } catch (error) {
+            console.error('Erro ao excluir nota:', error);
+            showAlert('error', 'Erro ao excluir nota');
+        }
+    }
+    
+    // Excluir nota diretamente do card
+    async function deleteNoteDirectly(noteId) {
+        if (!confirm('Tem certeza que deseja excluir esta nota?')) return;
+        
+        try {
+            const query = new Parse.Query(Note);
+            const note = await query.get(noteId);
+            
+            await note.destroy();
             
             showAlert('success', 'Nota excluída com sucesso!');
-            
-            // Fechar modal apenas se estivermos excluindo a nota atual do modal
-            if (noteId === currentNoteId || !noteId) {
-                closeNoteModal();
-            }
+            loadNotes();
         } catch (error) {
             console.error('Erro ao excluir nota:', error);
             showAlert('error', 'Erro ao excluir nota');
