@@ -15,6 +15,85 @@
         <header>
             <h1>Sistema de Controle</h1>
             
+            <!-- Painel de Controles de Acessibilidade -->
+            <div class="accessibility-panel" id="accessibilityPanel">
+                <button class="accessibility-toggle" id="accessibilityToggle" aria-label="Abrir painel de acessibilidade">
+                    <i class="fas fa-universal-access"></i>
+                    <span>Acessibilidade</span>
+                </button>
+                
+                <div class="accessibility-controls" id="accessibilityControls" style="display: none;">
+                    <div class="accessibility-section">
+                        <h3>Aparência</h3>
+                        <div class="control-group">
+                            <button class="accessibility-btn" id="darkModeToggle" aria-label="Alternar modo escuro">
+                                <i class="fas fa-moon"></i>
+                                <span>Modo Escuro</span>
+                            </button>
+                            
+                            <div class="font-size-controls">
+                                <label for="fontSizeSlider">Tamanho da Fonte:</label>
+                                <div class="font-size-group">
+                                    <button class="font-btn" id="decreaseFontBtn" aria-label="Diminuir fonte">
+                                        <i class="fas fa-minus"></i>
+                                    </button>
+                                    <input type="range" id="fontSizeSlider" min="12" max="24" value="16" aria-label="Controle de tamanho da fonte">
+                                    <button class="font-btn" id="increaseFontBtn" aria-label="Aumentar fonte">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                </div>
+                                <span id="fontSizeDisplay">16px</span>
+                            </div>
+                            
+                            <button class="accessibility-btn" id="largeBtnsToggle" aria-label="Alternar botões grandes">
+                                <i class="fas fa-expand-arrows-alt"></i>
+                                <span>Botões Grandes</span>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="accessibility-section">
+                        <h3>Navegação</h3>
+                        <div class="control-group">
+                            <button class="accessibility-btn" id="keyboardNavToggle" aria-label="Ativar navegação por teclado">
+                                <i class="fas fa-keyboard"></i>
+                                <span>Navegação por Teclado</span>
+                            </button>
+                            
+                            <button class="accessibility-btn" id="textToSpeechToggle" aria-label="Ativar leitura de texto">
+                                <i class="fas fa-volume-up"></i>
+                                <span>Leitura de Voz</span>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="accessibility-section">
+                        <h3>Idioma e Tradução</h3>
+                        <div class="control-group">
+                            <button class="accessibility-btn" id="librasToggle" aria-label="Ativar tradução em Libras">
+                                <i class="fas fa-hands"></i>
+                                <span>Tradução em Libras</span>
+                            </button>
+                            
+                            <button class="accessibility-btn" id="imageDescToggle" aria-label="Ativar descrição de imagens">
+                                <i class="fas fa-image"></i>
+                                <span>Descrição de Imagens</span>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="accessibility-section">
+                        <h3>Configurações</h3>
+                        <div class="control-group">
+                            <button class="accessibility-btn reset-btn" id="resetAccessibility" aria-label="Restaurar configurações padrão">
+                                <i class="fas fa-undo"></i>
+                                <span>Restaurar Padrão</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
             <!-- Navegação por abas -->
             <div class="tab-navigation">
                 <button class="tab-btn active" id="tasksTabBtn" data-tab="tasks">
